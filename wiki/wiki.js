@@ -31,6 +31,7 @@ let quranDatabase = {}; // Indexed by chapter -> verse -> text
 let tafsirCache = {}; // Exegesis text cache
 let localQuranScripture = {}; // Indexed by chapter -> verse -> {arabic, english}
 let localWordByWordData = {}; // Indexed by chapter -> verse -> [words]
+let surahDBMeta = {}; // Indexed by surahId -> {seerah_period, hifz, philosophy_tags, ...}
 
 // Helper to convert standard digits to Arabic-Indic digits
 function toArabicDigits(num) {
@@ -179,9 +180,7 @@ if (document.readyState === 'loading') {
 function initApp() {
     setupTheme();
     populateSidebarSurahs();
-    loadQuranDatabase();
-    loadHadithDatabase();
-    loadDuaDatabase();
+    loadUnifiedDatabase();   // single fetch replacing loadQuranDatabase + loadWordByWordDatabase + loadHadithDatabase + loadDuaDatabase
     setupEventListeners();
     setupShareEventListeners();
 
@@ -408,56 +407,103 @@ function filterSidebarSurahs(query) {
     });
 }
 
-// Load Quran translation JSON database
-function loadQuranDatabase() {
-    fetch('quran-data.json?v=' + Date.now())
-        .then(response => response.json())
-        .then(data => {
-            const verses = data.quran || [];
-            verses.forEach(v => {
-                const ch = v.chapter;
-                const ver = v.verse;
-                // Support both new consolidated database format (v.english) and old format (v.text) as fallback
-                const txt = v.english || v.text;
-                if (!quranDatabase[ch]) {
-                    quranDatabase[ch] = {};
-                }
-                quranDatabase[ch][ver] = txt;
-                
-                // Store Arabic scripture locally
-                if (v.arabic) {
-                    if (!localQuranScripture[ch]) {
-                        localQuranScripture[ch] = {};
-                    }
-                    localQuranScripture[ch][ver] = {
-                        arabic: formatArabicVerseText(v.arabic, ver),
-                        english: txt
-                    };
-                }
-            });
-            console.log(`Quran database loaded successfully: ${verses.length} verses indexed.`);
-            
-            // Fetch word-by-word database
-            loadWordByWordDatabase();
+// ─────────────────────────────────────────────────────────────────────────────
+// Unified Database Loader
+// Replaces: loadQuranDatabase + loadWordByWordDatabase + loadHadithDatabase
+//           + loadDuaDatabase  (all 4 old loaders in one single fetch)
+// ─────────────────────────────────────────────────────────────────────────────
+function loadUnifiedDatabase() {
+    fetch('quranopedia.min.json?v=' + Date.now())
+        .then(res => res.json())
+        .then(db => {
+            const surahs   = db.surahs   || [];
+            const hadiths  = db.hadiths  || [];
+            const duas     = db.duas     || [];
 
-            if (activePage.startsWith('surah_') || activePage === 'main_page' || activePage.startsWith('search_')) {
+            // ── 1. Build verse text + Arabic scripture + word-by-word ────────
+            let verseCount = 0;
+            surahs.forEach(surah => {
+                const ch = surah.id;
+                if (!quranDatabase[ch])       quranDatabase[ch]       = {};
+                if (!localQuranScripture[ch]) localQuranScripture[ch] = {};
+
+                // Word-by-word: rebuild the { "ch": { "ver": [...] } } shape
+                // that localWordByWordData previously got from quran-wbw.json
+                const chKey = String(ch);
+                if (!localWordByWordData[chKey]) localWordByWordData[chKey] = {};
+
+                (surah.verses || []).forEach(v => {
+                    const ver = v.verse;
+                    const txt = v.english || '';
+
+                    quranDatabase[ch][ver] = txt;
+
+                    if (v.arabic) {
+                        localQuranScripture[ch][ver] = {
+                            arabic:  formatArabicVerseText(v.arabic, ver),
+                            english: txt
+                        };
+                    }
+
+                    if (v.wbw && v.wbw.length > 0) {
+                        localWordByWordData[chKey][String(ver)] = v.wbw;
+                    }
+
+                    verseCount++;
+                });
+            });
+
+            // ── Store surah-level metadata for badges ────────────────────
+            surahs.forEach(s => {
+                surahDBMeta[s.id] = {
+                    seerah_period:   s.seerah_period,
+                    revelation_place: s.revelation_place,
+                    hifz:            s.hifz,
+                    philosophy_tags: s.philosophy_tags,
+                    revelation_order: s.revelation_order,
+                    juz_start:       s.juz_start,
+                };
+            });
+
+            console.log(`✅ Unified DB loaded: ${verseCount} verses across ${surahs.length} surahs. [quranopedia.min.json v${db.meta?.version || '?'}]`);
+
+            // Light up the DB status badge in the footer
+            const dbBadge = document.getElementById('db-status-badge');
+            if (dbBadge) {
+                dbBadge.textContent = `✓ Offline DB v${db.meta?.version || '1.0'} · ${verseCount} verses`;
+                dbBadge.classList.add('loaded');
+            }
+
+            // ── 2. Hadiths ───────────────────────────────────────────────────
+            hadithDatabase = hadiths;
+            console.log(`Hadith database loaded: ${hadithDatabase.length} entries.`);
+
+            // ── 3. Duas ──────────────────────────────────────────────────────
+            duaDatabase = duas;
+            console.log(`Dua database loaded: ${duaDatabase.length} entries.`);
+
+            // ── 4. Fire post-load callbacks (same behaviour as old loaders) ──
+            populateSidebarHadiths();
+
+            const needsRefresh = (
+                activePage.startsWith('surah_') ||
+                activePage === 'main_page'       ||
+                activePage.startsWith('search_') ||
+                activePage.startsWith('hadith_') ||
+                activePage.startsWith('dua_')
+            );
+            if (needsRefresh) {
                 navigateTo(activePage, false);
             }
         })
         .catch(err => {
-            console.error("Error loading Quran data JSON:", err);
+            console.error('Error loading unified Quranopedia database:', err);
         });
 }
 
-function loadWordByWordDatabase() {
-    fetch('quran-wbw.json?v=' + Date.now())
-        .then(res => res.json())
-        .then(data => {
-            localWordByWordData = data;
-            console.log("Local Word-by-Word database loaded successfully.");
-        })
-        .catch(err => console.error("Error loading local Word-by-Word database:", err));
-}
+// Kept as stubs — no longer called, preserved for safety
+function loadQuranDatabase()    { /* migrated to loadUnifiedDatabase() */ }
+function loadWordByWordDatabase(){ /* migrated to loadUnifiedDatabase() */ }
 
 // Search Suggestions logic
 function showSearchSuggestions(query) {
@@ -581,7 +627,7 @@ function navigateTo(pageId, updateHistory = true) {
             quranNavSection.style.display = 'none';
             populateSidebarHadiths();
         }
-    } else if (targetPage.startsWith('surah_') || targetPage === 'main_page' || targetPage === 'hifz_helper' || SEERAH_ARTICLES[targetPage]) {
+    } else if (targetPage.startsWith('surah_') || targetPage === 'main_page' || targetPage === 'hifz_helper' || targetPage === 'hifz_guide' || SEERAH_ARTICLES[targetPage]) {
         const portalQuranBtn = document.getElementById('portal-quran-btn');
         const portalHadithBtn = document.getElementById('portal-hadith-btn');
         const quranNavSection = document.getElementById('quran-nav-section');
@@ -612,6 +658,8 @@ function navigateTo(pageId, updateHistory = true) {
         renderSeerahArticle(SEERAH_ARTICLES[targetPage]);
     } else if (targetPage === 'hifz_helper') {
         renderHifzHelper();
+    } else if (targetPage === 'hifz_guide') {
+        renderHifzGuide();
     } else if (targetPage.startsWith('surah_')) {
         const surahId = parseInt(targetPage.replace('surah_', ''));
         renderQuranChapter(surahId, highlightVerse);
@@ -690,7 +738,38 @@ function renderQuranChapter(surahId, highlightVerse) {
     renderInfobox(infoboxData);
 
     // Build Chapter Body HTML
+    // ── Seerah period badge data ─────────────────────────────────────────
+    const meta = surahDBMeta[surahId] || {};
+    const PERIOD_LABELS = {
+        'early_meccan':  { label: 'Early Meccan · 610–615 CE',  cls: 'early-meccan',  icon: '🕋' },
+        'middle_meccan': { label: 'Middle Meccan · 615–619 CE', cls: 'middle-meccan', icon: '🌙' },
+        'late_meccan':   { label: 'Late Meccan · 619–622 CE',   cls: 'late-meccan',   icon: '🌙' },
+        'medinan':       { label: 'Medinan · 622–632 CE',       cls: 'medinan',       icon: '🕌' },
+        'mixed':         { label: 'Multiple Periods',           cls: 'mixed',         icon: '📜' },
+    };
+    const period     = meta.seerah_period;
+    const periodInfo = PERIOD_LABELS[period];
+    const hifz       = meta.hifz || {};
+    const HIFZ_ICONS = { easy: '🟢', medium: '🟡', hard: '🔴' };
+
+    let badgeRowHtml = '<div class="seerah-badge-row">';
+    if (periodInfo) {
+        const seerahTarget = period === 'medinan' ? 'seerah_medinan_period' : 'seerah_meccan_period';
+        badgeRowHtml += `<a href="#${seerahTarget}" class="seerah-badge ${periodInfo.cls}" title="Click to read the ${periodInfo.label} Seerah article">${periodInfo.icon} ${periodInfo.label}</a>`;
+    }
+    if (meta.revelation_order) {
+        badgeRowHtml += `<span class="seerah-badge late-meccan" title="Chronological revelation order">📋 Revelation #${meta.revelation_order}</span>`;
+    }
+    if (hifz.difficulty) {
+        badgeRowHtml += `<span class="seerah-badge ${hifz.difficulty === 'easy' ? 'medinan' : hifz.difficulty === 'medium' ? 'middle-meccan' : 'early-meccan'}" title="Memorisation difficulty">${HIFZ_ICONS[hifz.difficulty] || ''} Hifz: ${hifz.difficulty.charAt(0).toUpperCase() + hifz.difficulty.slice(1)}</span>`;
+    }
+    if (meta.juz_start) {
+        badgeRowHtml += `<span class="seerah-badge mixed" title="Juz' (part) number">📖 Juz' ${meta.juz_start}</span>`;
+    }
+    badgeRowHtml += '</div>';
+
     let bodyHtml = `
+        ${badgeRowHtml}
         <p><b>Surah ${surah.name}</b> (Arabic: سورة ${surah.name}, "${surah.english}") is the ${surah.id} chapter (<i>surah</i>) of the Qur'an, containing ${surah.verses} verses (<i>ayahs</i>). It is classified as a <b>${surah.type} Surah</b>, meaning it is historically understood to have been revealed during the ${surah.type === 'Meccan' ? 'Meccan Period (610–622 CE)' : 'Medinan Period (622–632 CE)'} of the prophecy.</p>
         
         <h2>Introduction</h2>
@@ -1679,33 +1758,9 @@ function getApiVerse(chapter, verse) {
 // Hadith and Dua Integration
 // ==========================================
 
-function loadHadithDatabase() {
-    fetch('hadith-data.json')
-        .then(res => res.json())
-        .then(data => {
-            hadithDatabase = data.hadiths || [];
-            console.log(`Hadith database loaded successfully: ${hadithDatabase.length} entries.`);
-            populateSidebarHadiths();
-            if (activePage.startsWith('hadith_') || activePage.startsWith('search_')) {
-                navigateTo(activePage, false);
-            }
-        })
-        .catch(err => console.error("Error loading Hadith data:", err));
-}
-
-function loadDuaDatabase() {
-    fetch('dua-data.json')
-        .then(res => res.json())
-        .then(data => {
-            duaDatabase = data.duas || [];
-            console.log(`Dua database loaded successfully: ${duaDatabase.length} entries.`);
-            populateSidebarHadiths();
-            if (activePage.startsWith('dua_') || activePage.startsWith('search_')) {
-                navigateTo(activePage, false);
-            }
-        })
-        .catch(err => console.error("Error loading Dua data:", err));
-}
+// Kept as stubs — migrated to loadUnifiedDatabase()
+function loadHadithDatabase() { /* migrated to loadUnifiedDatabase() */ }
+function loadDuaDatabase()    { /* migrated to loadUnifiedDatabase() */ }
 
 function populateSidebarHadiths() {
     const list = document.getElementById('sidebar-hadith-list');
@@ -3193,11 +3248,186 @@ window.playVerseAudio = function(surahId, verseVal) {
     }
 };
 
-// Bind to window for global access
+// Memorization Guide — Static Article
+// =========================================================================
+
+function renderHifzGuide() {
+    const titleEl = document.getElementById('article-title');
+    if (titleEl) titleEl.innerText = '📗 Memorization Guide';
+
+    renderInfobox({
+        'title': 'Hifz (Memorization)',
+        'image': '📗',
+        'arabic_term': 'حِفْظ',
+        'meaning': 'Preservation in the heart',
+        'tradition': 'Classical Islamic scholarship',
+        'goal': 'Complete recitation from memory'
+    });
+
+    // Build dynamic surah difficulty table from loaded DB metadata
+    const easyRows   = [];
+    const mediumRows = [];
+    const hardRows   = [];
+
+    SURAH_METADATA.forEach(s => {
+        const meta = surahDBMeta[s.id] || {};
+        const hifz = meta.hifz || {};
+        const diff = hifz.difficulty || 'medium';
+        const pages = (hifz.page_start && hifz.page_end)
+            ? `${hifz.page_start}–${hifz.page_end}`
+            : '—';
+        const popular = hifz.popular_for_memorisation
+            ? '<span style="color: var(--accent-color); font-weight:600;">★ Popular</span>'
+            : '';
+        const row = `<tr>
+            <td>${s.id}</td>
+            <td><a href="#surah_${s.id}" onclick="navigateTo('surah_${s.id}')" style="color:var(--accent-color);">${s.name}</a></td>
+            <td>${s.english}</td>
+            <td>${s.verses}</td>
+            <td>${pages}</td>
+            <td>${popular}</td>
+        </tr>`;
+        if (diff === 'easy')   easyRows.push(row);
+        else if (diff === 'hard') hardRows.push(row);
+        else mediumRows.push(row);
+    });
+
+    const tableHead = `<thead><tr>
+        <th>#</th><th>Surah</th><th>Meaning</th>
+        <th>Verses</th><th>Pages (Madani)</th><th>Note</th>
+    </tr></thead>`;
+
+    const html = `
+<p>This guide is a companion to the <a href="#hifz_helper" onclick="navigateTo('hifz_helper')">Hifz Helper</a> tool. It covers the classical methodology for Quranic memorization, practical techniques for modern learners, and a reference table of all 114 Surahs sorted by difficulty.</p>
+
+<h2>1. What Is Hifz?</h2>
+<p><b>Hifz</b> (<span style="font-family:'Amiri',serif; font-size:1.2em;">حِفْظ</span>) literally means "preservation" or "guarding." In Islamic scholarship it refers to the complete memorization of the Quran — 114 Surahs, 6,236 verses — such that the text can be recited from memory without reference to a written copy. A person who has completed Hifz is called a <b>Hafiz</b> (male) or <b>Hafiza</b> (female).</p>
+<p>The Prophet ﷺ said: <i>"The one who recites the Quran and is proficient in it will be with the noble, righteous scribes (the angels), and the one who recites the Quran and finds it difficult — and he perseveres — will have two rewards."</i> (Bukhari 4937)</p>
+
+<h2>2. The Classical Method</h2>
+<p>Classical scholars developed a structured approach refined over 1,400 years:</p>
+
+<h3>Lesson Plan (Sabaq, Sabqi, Manzil)</h3>
+<ul>
+    <li><b>Sabaq</b> — Today's new portion. A beginner typically starts with ½–1 page per day, an advanced student may do 1–2 pages.</li>
+    <li><b>Sabqi</b> — Recent revision: the last 7 days of new portions, revised daily before the new lesson.</li>
+    <li><b>Manzil</b> — Old revision: the entire memorized portion divided into 7 parts, one reviewed each day of the week so the full Quran is revised weekly.</li>
+</ul>
+
+<h3>The Wifq Standard (صفة الإتقان)</h3>
+<p>A verse is not considered memorized until it meets the <b>Mutqin</b> standard: the student can recite it <b>without hesitation</b>, with <b>correct tajweed</b>, and without a single omission or addition — even under distraction. Do not advance to a new verse until the current one meets this bar.</p>
+
+<h2>3. The 6-4-4-6 Trainer Method</h2>
+<p>The built-in <a href="#hifz_helper" onclick="navigateTo('hifz_helper')">Hifz Helper</a> implements the <b>6-4-4-6 technique</b>, a structured repetition cycle proven effective for short-term encoding:</p>
+<ol>
+    <li><b>Listen ×6</b> — Play the verse 6 times while following the text visually. Do not recite yet.</li>
+    <li><b>Recite ×4</b> — Cover the text. Attempt to recite from memory 4 times, checking after each attempt.</li>
+    <li><b>Combine ×4</b> — Recite the new verse joined to the previous verse 4 times, building contextual flow.</li>
+    <li><b>Review ×6</b> — Recite the full session's range (all new verses learned today) 6 times continuously.</li>
+</ol>
+<p>Select the <b>6-4-4-6 Trainer</b> mode in the Hifz Helper to be guided through each step automatically.</p>
+
+<h2>4. Using the Hifz Helper Modes</h2>
+<table class="wiki-table" style="width:100%;">
+    <thead><tr><th>Mode</th><th>Purpose</th><th>How to Use</th></tr></thead>
+    <tbody>
+        <tr>
+            <td><b>6-4-4-6 Trainer</b></td>
+            <td>Primary memorization</td>
+            <td>Select surah &amp; range, press Start. Follow prompts.</td>
+        </tr>
+        <tr>
+            <td><b>Memorize Arabic</b></td>
+            <td>Active recall with masking</td>
+            <td>Click individual words to hide/reveal them. Use Mask Even/Odd presets to challenge yourself progressively.</td>
+        </tr>
+        <tr>
+            <td><b>Memorize Meaning</b></td>
+            <td>Understand what you recite</td>
+            <td>Translation is hidden. Click to reveal after attempting to recall the meaning.</td>
+        </tr>
+        <tr>
+            <td><b>Teach Vocabulary</b></td>
+            <td>Root word recognition</td>
+            <td>Each word is shown as a card with transliteration. Hover for meaning. Builds pattern recognition across verses.</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>5. Working with Confusable Verses</h2>
+<p>Many Surahs contain verses that are nearly identical, differing by only one or two words. These are the most common source of errors for Huffaz. Examples:</p>
+<ul>
+    <li>Surah Al-Baqarah contains several near-duplicate passages on similar themes.</li>
+    <li>The Mufassal (short) Surahs — especially Ar-Rahman — repeat <i>"Fabi-ayyi ala'i rabbikuma tukaththiban"</i> 31 times with subtle context differences.</li>
+</ul>
+<p>The database tracks <b>confusable verses</b> via the <code>hifz_notes.similar_to</code> field. Future versions of the Hifz Helper will surface these warnings automatically when you select a range containing known confusables.</p>
+
+<h2>6. Audio & Repetition Settings</h2>
+<p>The audio player at the bottom of the screen provides:</p>
+<ul>
+    <li><b>Loop</b> — Repeat a single verse 1–20 times before advancing. Set to 7–10 for new verses.</li>
+    <li><b>Delay</b> — Pause between verses (0–15 seconds). Use 2–3 seconds for active recall practice.</li>
+    <li><b>Speed</b> — 0.75× is ideal for learning new verses; 1.0× for review; 1.25–1.5× for fluency testing.</li>
+    <li><b>Reciter</b> — Different reciters emphasize different tajweed patterns. Learning from multiple reciters improves robustness.</li>
+</ul>
+
+<h2>7. Practical Tips for Retention</h2>
+<ul>
+    <li>📅 <b>Consistency beats intensity.</b> 20 minutes daily is far more effective than 3 hours once a week.</li>
+    <li>🌙 <b>Recite before sleep.</b> Memory consolidation occurs during sleep. Reviewing your day's memorization before bed significantly improves next-day retention.</li>
+    <li>🕌 <b>Use it in salah.</b> Reciting memorized portions in voluntary prayers (tahajjud, sunnah) is the most natural way to reinforce and test your Hifz.</li>
+    <li>🔄 <b>Never skip Manzil.</b> Old revision is more important than new memorization. Scholars say "protecting what you have is Fardh; adding new is Nafl."</li>
+    <li>👂 <b>Recite to someone.</b> Being heard by a qualified teacher or a fellow student forces precision that silent revision cannot replicate.</li>
+    <li>📖 <b>Use one Mushaf.</b> The visual layout of the page becomes part of the memory. Switching between different prints disrupts this spatial encoding.</li>
+</ul>
+
+<h2>8. Recommended Starting Order</h2>
+<p>The traditional approach begins from the back of the Quran (Juz 'Amma — the 30th Juz) because the Surahs are short and the verses frequently used in daily prayers. The table below shows all 114 Surahs sorted by Hifz difficulty as rated in the Quranopedia database.</p>
+
+<h3>Easy Surahs</h3>
+<div style="overflow-x:auto;">
+<table class="wiki-table" style="width:100%; font-size:13px;">
+    ${tableHead}
+    <tbody>${easyRows.join('')}</tbody>
+</table>
+</div>
+
+<h3>Medium Surahs</h3>
+<div style="overflow-x:auto;">
+<table class="wiki-table" style="width:100%; font-size:13px;">
+    ${tableHead}
+    <tbody>${mediumRows.join('')}</tbody>
+</table>
+</div>
+
+<h3>Challenging Surahs</h3>
+<div style="overflow-x:auto;">
+<table class="wiki-table" style="width:100%; font-size:13px;">
+    ${tableHead}
+    <tbody>${hardRows.join('')}</tbody>
+</table>
+</div>
+
+<h2>9. Further Reading</h2>
+<ul>
+    <li><b>Tajweed Rules</b> — Proper pronunciation is inseparable from Hifz. Consider studying with a qualified teacher alongside your memorization.</li>
+    <li><b>Tafsir Integration</b> — Understanding the meaning of verses (see the Tafsir drawer on any Surah page) dramatically improves retention through semantic anchoring.</li>
+    <li><b>Community</b> — Joining a local Hifz circle or online accountability group provides the social reinforcement that sustains long-term progress.</li>
+</ul>
+`;
+
+    const bodyEl = document.getElementById('article-body');
+    if (bodyEl) bodyEl.innerHTML = html;
+
+    // Build TOC from the rendered h2/h3 headings
+    if (typeof buildTOC === 'function') buildTOC();
+}
+
 window.AudioController = AudioController;
 window.HifzTrainer6446 = HifzTrainer6446;
 window.applyMaskPreset = applyMaskPreset;
 window.renderHifzHelper = renderHifzHelper;
+window.renderHifzGuide = renderHifzGuide;
 window.loadHifzWorkspace = loadHifzWorkspace;
 window.renderSelectedHifzMode = renderSelectedHifzMode;
 

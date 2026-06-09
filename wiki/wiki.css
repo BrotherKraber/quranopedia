@@ -1057,6 +1057,65 @@ body.dark-mode .daily-verse-badge {
     text-decoration: underline;
 }
 
+/* ── Seerah Period Badges ─────────────────────────────────────────────────── */
+.seerah-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 6px 0 14px;
+}
+
+.seerah-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    cursor: default;
+    user-select: none;
+}
+
+/* Period colours */
+.seerah-badge.early-meccan  { background: #fff3e0; color: #e65100; border-color: #ffcc80; }
+.seerah-badge.middle-meccan { background: #fce4ec; color: #ad1457; border-color: #f48fb1; }
+.seerah-badge.late-meccan   { background: #e8eaf6; color: #283593; border-color: #9fa8da; }
+.seerah-badge.medinan       { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; }
+.seerah-badge.mixed         { background: #f3e5f5; color: #4a148c; border-color: #ce93d8; }
+
+[data-theme="dark"] .seerah-badge.early-meccan  { background: #3e272322; color: #ffcc80; border-color: #6d4c41; }
+[data-theme="dark"] .seerah-badge.middle-meccan { background: #88002222; color: #f48fb1; border-color: #880e4f; }
+[data-theme="dark"] .seerah-badge.late-meccan   { background: #1a237e22; color: #9fa8da; border-color: #3949ab; }
+[data-theme="dark"] .seerah-badge.medinan       { background: #1b5e2022; color: #a5d6a7; border-color: #2e7d32; }
+[data-theme="dark"] .seerah-badge.mixed         { background: #4a148c22; color: #ce93d8; border-color: #7b1fa2; }
+
+/* DB status pill — fades in once unified DB finishes loading */
+.db-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+    opacity: 0;
+    transition: opacity 0.6s ease 0.4s;
+}
+.db-status-badge.loaded { opacity: 1; }
+[data-theme="dark"] .db-status-badge {
+    background: #1b5e2022;
+    color: #a5d6a7;
+    border-color: #2e7d32;
+}
+
 .wiki-footer {
     margin-top: 45px;
     border-top: 1px solid var(--border-light);

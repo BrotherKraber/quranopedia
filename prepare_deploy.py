@@ -1,46 +1,75 @@
+#!/usr/bin/env python3
+"""
+prepare_deploy.py
+=================
+Builds a clean public distribution and deploys it to Netlify production.
+
+What it does
+────────────
+1. Copies wiki/ → wiki_dist/           (fresh copy every run)
+2. Copies db/quranopedia.min.json into wiki_dist/ (in case build_quranopedia_db.py
+   hasn't been run yet, falls back to wiki/quranopedia.min.json)
+3. Deploys wiki_dist/ to Netlify production
+
+Usage
+─────
+    cd /home/razim/quran-app
+    python3 prepare_deploy.py
+
+To preview without deploying:
+    python3 prepare_deploy.py --preview
+"""
+
 import os
 import shutil
-import re
+import subprocess
+import sys
 
-base_dir = "/home/razim/quran-app"
-wiki_src = os.path.join(base_dir, "wiki")
-wiki_dist = os.path.join(base_dir, "wiki_dist")
+BASE      = os.path.dirname(os.path.abspath(__file__))
+WIKI_SRC  = os.path.join(BASE, "wiki")
+WIKI_DIST = os.path.join(BASE, "wiki_dist")
+DB_MIN    = os.path.join(BASE, "db", "quranopedia.min.json")
 
-# 1. Clean previous build if any
-if os.path.exists(wiki_dist):
-    shutil.rmtree(wiki_dist)
+preview_only = "--preview" in sys.argv
 
-# 2. Copy wiki folder to wiki_dist
-shutil.copytree(wiki_src, wiki_dist)
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Clean + copy
+# ─────────────────────────────────────────────────────────────────────────────
+print("► Cleaning previous build …")
+if os.path.exists(WIKI_DIST):
+    shutil.rmtree(WIKI_DIST)
 
-# 3. Modify wiki_dist/index.html to remove/hide hifz helper & guide links
-index_path = os.path.join(wiki_dist, "index.html")
-with open(index_path, "r", encoding="utf-8") as f:
-    content = f.read()
+print("► Copying wiki/ → wiki_dist/ …")
+shutil.copytree(WIKI_SRC, WIKI_DIST)
+print("  ✓ Copied")
 
-# Remove list items for hifz_helper and hifz_guide
-content = re.sub(r'<li><a href="#hifz_helper".*?</li>\s*', '', content)
-content = re.sub(r'<li><a href="#hifz_guide".*?</li>\s*', '', content)
-
-with open(index_path, "w", encoding="utf-8") as f:
-    f.write(content)
-
-# 4. Modify wiki_dist/wiki.js to redirect hifz_helper and hifz_guide to main_page
-wiki_js_path = os.path.join(wiki_dist, "wiki.js")
-with open(wiki_js_path, "r", encoding="utf-8") as f:
-    js_content = f.read()
-
-# Insert redirection logic at the beginning of navigateTo function
-nav_to_pattern = r'function navigateTo\(pageId,\s*updateHistory\s*=\s*true\)\s*\{'
-redirection_code = 'function navigateTo(pageId, updateHistory = true) {\n    if (pageId === "hifz_helper" || pageId === "hifz_guide") {\n        pageId = "main_page";\n    }'
-
-if re.search(nav_to_pattern, js_content):
-    js_content = re.sub(nav_to_pattern, redirection_code, js_content, count=1)
-    print("✓ Successfully injected route redirection in wiki.js")
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Ensure unified DB is present in wiki_dist/
+#    Priority: db/quranopedia.min.json > wiki/quranopedia.min.json (already copied)
+# ─────────────────────────────────────────────────────────────────────────────
+db_dest = os.path.join(WIKI_DIST, "quranopedia.min.json")
+if os.path.exists(DB_MIN):
+    shutil.copy2(DB_MIN, db_dest)
+    size_mb = os.path.getsize(db_dest) / (1024 * 1024)
+    print(f"► Updated quranopedia.min.json from db/ ({size_mb:.1f} MB)")
+elif os.path.exists(db_dest):
+    size_mb = os.path.getsize(db_dest) / (1024 * 1024)
+    print(f"► quranopedia.min.json present from wiki/ copy ({size_mb:.1f} MB)")
 else:
-    print("⚠️ Warning: navigateTo function signature not matched. Redirection not inserted.")
+    print("  [ERROR] quranopedia.min.json not found. Run build_quranopedia_db.py first.")
+    sys.exit(1)
 
-with open(wiki_js_path, "w", encoding="utf-8") as f:
-    f.write(js_content)
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Deploy
+# ─────────────────────────────────────────────────────────────────────────────
+if preview_only:
+    print("\n✅ Preview build ready in wiki_dist/ (not deployed — pass no args to deploy)")
+    sys.exit(0)
 
-print("✓ Clean distribution folder prepared in 'wiki_dist'")
+print("\n► Deploying wiki_dist/ to Netlify production …")
+result = subprocess.run(
+    ["netlify", "deploy", "--prod", "--dir", "wiki_dist"],
+    cwd=BASE,
+    capture_output=False,
+)
+sys.exit(result.returncode)

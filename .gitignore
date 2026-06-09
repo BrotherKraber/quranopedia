@@ -2,3 +2,7 @@
 .netlify
 __pycache__/
 *.pyc
+
+# Generated database output (run build_quranopedia_db.py to regenerate)
+db/
+wiki_dist/
