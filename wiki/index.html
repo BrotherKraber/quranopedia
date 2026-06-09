@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran Encyclopedia</title>
+    
+    <!-- Rich Link Previews / Open Graph & Twitter Cards -->
+    <meta name="description" content="An interactive web portal and offline-first resource to read the Quran English translation, exegeses (Tafsirs), and historical context articles (Seerah).">
+    
+    <!-- Open Graph (Facebook / WhatsApp / Slack / Discord) -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Quran Encyclopedia 📖">
+    <meta property="og:description" content="Interactive Quran reading, English translations, scholarly Tafsirs, and historical articles.">
+    <meta property="og:url" content="https://quranopedia.org/">
+    <meta property="og:image" content="https://quranopedia.org/og_preview.png">
+    
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Quran Encyclopedia 📖">
+    <meta name="twitter:description" content="Interactive Quran reading, English translations, scholarly Tafsirs, and historical articles.">
+    <meta name="twitter:image" content="https://quranopedia.org/og_preview.png">
+    
+    <link rel="stylesheet" href="wiki.css?v=2.4">
+    <link rel="shortcut icon" href="favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <!-- Mobile App Configuration -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Quranopedia">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#161b22" media="(prefers-color-scheme: dark)">
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Amiri:ital@0;1&display=swap" rel="stylesheet">
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "48bfaf87843e4c819436e17748716e91"}'></script><!-- End Cloudflare Web Analytics -->
+</head>
+<body class="light-mode">
+    <!-- Top Wikipedia Header -->
+    <header class="wiki-header">
+        <div class="header-inner">
+            <div class="header-left">
+                <button id="sidebar-toggle" class="icon-btn" title="Toggle Sidebar">☰</button>
+                <div class="logo" onclick="navigateTo('main_page')">
+                    <span class="logo-w">Q</span>
+                    <div class="logo-text">
+                        <span class="logo-title">Quran Encyclopedia</span>
+                        <span class="logo-subtitle">A Comprehensive Resource</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Search bar -->
+            <div class="header-center">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Search Quran Encyclopedia (e.g. Fatihah, Badr, 112:4, cow)..." autocomplete="off">
+                    <button id="search-btn" class="search-btn">Search</button>
+                    <div id="search-suggestions" class="suggestions-box"></div>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <!-- Theme toggle -->
+                <button id="theme-toggle" class="theme-btn" title="Toggle Light/Dark Mode">🌓 Theme</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="wiki-container">
+        <!-- Sidebar Navigation -->
+        <aside class="wiki-sidebar" id="wiki-sidebar">
+            <div class="sidebar-section" style="padding-bottom: 12px; border-bottom: 1px solid var(--border-light); margin-bottom: 15px;">
+                <div class="portal-switcher">
+                    <button class="portal-btn active" id="portal-quran-btn">📖 Quran & Seerah</button>
+                    <button class="portal-btn" id="portal-hadith-btn">📜 Hadith & Dua</button>
+                </div>
+            </div>
+            
+            <!-- Quran Navigation (Default) -->
+            <div id="quran-nav-section" class="sidebar-nav-group">
+                <div class="sidebar-section">
+                    <h3>Navigation</h3>
+                    <ul>
+                        <li><a href="#main_page" class="nav-link active" id="nav-main_page">Main Page</a></li>
+                        <li><a href="#quran_compilation" class="nav-link" id="nav-quran_compilation">Quran Compilation</a></li>
+                        <li><a href="#seerah_meccan_period" class="nav-link" id="nav-seerah_meccan_period">Meccan Period</a></li>
+                        <li><a href="#seerah_medinan_period" class="nav-link" id="nav-seerah_medinan_period">Medinan Period</a></li>
+                        <li><a href="#asbab_al_nuzul" class="nav-link" id="nav-asbab_al_nuzul">Asbab al-Nuzul</a></li>
+                        <li><a href="#hifz_helper" class="nav-link" id="nav-hifz_helper">Hifz Helper</a></li>
+                        <li><a href="#hifz_guide" class="nav-link" id="nav-hifz_guide">Memorization Guide</a></li>
+                        <li><a href="#global_islam" class="nav-link" id="nav-global_islam">Global Islam Map</a></li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Quran Chapters (Surahs)</h3>
+                    <div class="sidebar-search">
+                        <input type="text" id="surah-filter" placeholder="Filter surahs..." title="Filter chapter list">
+                    </div>
+                    <ul class="surah-list" id="sidebar-surah-list">
+                        <!-- Surah list dynamically populated here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Hadith/Dua Navigation (Hidden by default) -->
+            <div id="hadith-nav-section" class="sidebar-nav-group" style="display: none;">
+                <div class="sidebar-section">
+                    <h3>Collections</h3>
+                    <ul>
+                        <li><a href="#hadith_all" class="nav-link" id="nav-hadith_all">Prophetic Hadiths</a></li>
+                        <li><a href="#dua_all" class="nav-link" id="nav-dua_all">Islamic Duas</a></li>
+                      </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3>Hadith & Dua Topics</h3>
+                    <div class="sidebar-search">
+                        <input type="text" id="hadith-filter" placeholder="Filter topics..." title="Filter topics list">
+                    </div>
+                    <ul class="surah-list" id="sidebar-hadith-list">
+                        <!-- Hadith/Dua sections populated here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sister Portals -->
+            <div class="sidebar-section" style="margin-top: 25px; border-top: 1px solid var(--border-light); padding-top: 15px;">
+                <h3>Sister Portals</h3>
+                <ul>
+                    <li><a href="https://philosophy.quranopedia.org" class="nav-link" style="display: flex; align-items: center; gap: 8px; width: 100%;">⚖️ <span>Philosophy & Kalam</span> <span class="beta-badge">BETA</span></a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content Pane -->
+        <main class="wiki-content">
+            <div class="wiki-content-inner">
+                <div class="article-header">
+                    <h1 id="article-title">Main Page</h1>
+                    <div class="article-meta">From the Quran Encyclopedia</div>
+                </div>
+
+                <div class="article-body-wrapper">
+                    <!-- Central Text Area -->
+                    <div class="article-core">
+                        <!-- Table of contents placeholder -->
+                        <div id="toc-box" class="toc-card">
+                            <div class="toc-title">
+                                <span>Contents</span>
+                                <button id="toc-toggle" class="text-btn">[hide]</button>
+                            </div>
+                            <ul id="toc-list">
+                                <!-- Populated dynamically based on headers -->
+                            </ul>
+                        </div>
+
+                        <!-- Main Article Body -->
+                        <div id="article-body" class="article-body">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Right Side Wikipedia Infobox -->
+                    <aside class="wiki-infobox-container">
+                        <div id="wiki-infobox" class="wiki-infobox">
+                            <!-- Infobox populated dynamically -->
+                        </div>
+                    </aside>
+                </div>
+
+                <!-- Footer -->
+                <footer class="wiki-footer">
+                    <div class="footer-links">
+                        <a href="#main_page">Home</a> &bull;
+                        <a href="https://philosophy.quranopedia.org">Philosophy Portal</a> &bull;
+                        <a href="#changelog">Changelog</a>
+                    </div>
+                    <div class="footer-credit">
+                        Quran Encyclopedia &copy; 2026. Sourced from authentic static databases.
+                    </div>
+                </footer>
+            </div>
+        </main>
+    </div>
+
+    <!-- Share Verse Modal -->
+    <div id="share-modal" class="modal-overlay" aria-labelledby="share-modal-title" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="share-modal-title">Share Verse</h2>
+                <button id="close-share-modal" class="modal-close-btn" aria-label="Close modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-preview-card">
+                    <div id="share-preview-arabic" class="verse-arabic"></div>
+                    <div id="share-preview-translation" class="verse-translation"></div>
+                    <div id="share-preview-ref" class="verse-num"></div>
+                </div>
+                
+                <div class="share-input-group">
+                    <label for="share-url-input">Shareable Link</label>
+                    <div class="input-with-button">
+                        <input type="text" id="share-url-input" readonly>
+                        <button id="copy-link-btn" class="modal-btn primary">Copy Link</button>
+                    </div>
+                </div>
+
+                <div class="share-input-group">
+                    <label for="share-text-input">Full Verse with Meaning</label>
+                    <textarea id="share-text-input" readonly rows="4"></textarea>
+                    <button id="copy-full-btn" class="modal-btn secondary">📋 Copy Verse & Meaning</button>
+                </div>
+
+                <div class="share-social-section">
+                    <span class="social-label">Send to:</span>
+                    <div class="social-buttons">
+                        <a id="share-wa" href="#" target="_blank" class="social-btn whatsapp">WhatsApp</a>
+                        <a id="share-tg" href="#" target="_blank" class="social-btn telegram">Telegram</a>
+                        <a id="share-tw" href="#" target="_blank" class="social-btn twitter">X (Twitter)</a>
+                        <a id="share-email" href="#" class="social-btn email">Email</a>
+                    </div>
+                    
+                    <div class="share-input-group" style="margin-top: 5px; margin-bottom: 5px;">
+                        <label>Story Card Theme</label>
+                        <div class="story-theme-selector">
+                            <button id="story-theme-light" class="theme-select-btn active">☀️ Light Card</button>
+                            <button id="story-theme-dark" class="theme-select-btn">🌙 Dark Card</button>
+                        </div>
+                    </div>
+
+                    <button id="share-instagram" class="social-btn instagram-story" style="grid-column: span 2; margin-top: 6px; border: none; cursor: pointer; width: 100%; font-family: inherit;">
+                        📸 Share / Download Instagram Story
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent Bottom Audio Player -->
+    <div id="hifz-audio-player-bar" class="audio-player-bar" style="display: none;">
+        <div class="audio-player-inner">
+            <div class="player-left">
+                <span class="player-meta" id="player-verse-ref">Surah 1:1</span>
+                <select id="player-reciter-select" class="player-select">
+                    <option value="Alafasy_128kbps">Mishary Rashid Alafasy</option>
+                    <option value="aziz_alili_128kbps">Aziz Alili</option>
+                    <option value="Husary_128kbps">Mahmoud Khalil Al-Husary</option>
+                    <option value="Ghamadi_40kbps">Saad Al-Ghamdi</option>
+                    <option value="Abdul_Basit_Murattal_192kbps">Abdul Basit Abdul Samad</option>
+                    <option value="Abdurrahmaan_As-Sudais_192kbps">Abdurrahman Al-Sudais</option>
+                </select>
+            </div>
+            <div class="player-center">
+                <button id="player-prev-btn" class="player-icon-btn" title="Previous Verse">⏮</button>
+                <button id="player-play-btn" class="player-play-btn" title="Play/Pause">▶</button>
+                <button id="player-next-btn" class="player-icon-btn" title="Next Verse">⏭</button>
+                <audio id="hifz-native-audio" style="display: none;"></audio>
+            </div>
+            <div class="player-right">
+                <div class="player-control-group">
+                    <label for="player-loop">Loop Verse</label>
+                    <input type="number" id="player-loop" min="1" max="20" value="1" class="player-number-input" style="width: 45px;">
+                </div>
+                <div class="player-control-group">
+                    <label for="player-delay">Delay (s)</label>
+                    <input type="number" id="player-delay" min="0" max="15" value="0" class="player-number-input" style="width: 45px;">
+                </div>
+                <div class="player-control-group">
+                    <label for="player-speed">Speed</label>
+                    <select id="player-speed" class="player-select">
+                        <option value="0.75">0.75x</option>
+                        <option value="1.0" selected>1.0x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script references -->
+    <script src="seerah.js?v=2.4"></script>
+    <script src="wiki.js?v=2.4"></script>
+</body>
+</html>

@@ -1,0 +1,643 @@
+#!/usr/bin/env python3
+"""
+Quran CLI - A premium command-line tool to read the Quran English translation.
+Supports:
+  - quran {chapter number}
+  - quran {chapter name}
+  - quran {chapter number}:{verse}
+  - quran {chapter number}:{verse start}-{verse end}
+  - quran {chapter name}:{verse}
+  - quran {chapter name}:{verse start}-{verse end}
+"""
+
+import sys
+import os
+import json
+import re
+import shutil
+import textwrap
+import difflib
+
+# Metadata for all 114 Surahs
+SURAHS = [
+    {"id": 1, "name": "Al-Fatihah", "english": "The Opening", "verses": 7, "aliases": ["fatihah", "opening", "theopening", "alfatihah"]},
+    {"id": 2, "name": "Al-Baqarah", "english": "The Cow", "verses": 286, "aliases": ["baqarah", "cow", "thecow", "albaqarah"]},
+    {"id": 3, "name": "Ali 'Imran", "english": "Family of Imran", "verses": 200, "aliases": ["imran", "familyofimran", "aliimran", "aalimran", "ali-imran"]},
+    {"id": 4, "name": "An-Nisa", "english": "The Women", "verses": 176, "aliases": ["nisa", "women", "thewomen", "annisa"]},
+    {"id": 5, "name": "Al-Ma'idah", "english": "The Table Spread", "verses": 120, "aliases": ["maidah", "table", "tablespread", "thetablespread", "almaidah"]},
+    {"id": 6, "name": "Al-An'am", "english": "The Cattle", "verses": 165, "aliases": ["anam", "cattle", "thecattle", "alanam"]},
+    {"id": 7, "name": "Al-A'raf", "english": "The Heights", "verses": 206, "aliases": ["araf", "heights", "theheights", "alaraf"]},
+    {"id": 8, "name": "Al-Anfal", "english": "The Spoils of War", "verses": 75, "aliases": ["anfal", "spoils", "spoilsofwar", "thespoilsofwar", "alanfal"]},
+    {"id": 9, "name": "At-Tawbah", "english": "The Repentance", "verses": 129, "aliases": ["tawbah", "repentance", "therepentance", "attawbah", "baraah"]},
+    {"id": 10, "name": "Yunus", "english": "Jonah", "verses": 109, "aliases": ["yunus", "jonah"]},
+    {"id": 11, "name": "Hud", "english": "Hud", "verses": 123, "aliases": ["hud"]},
+    {"id": 12, "name": "Yusuf", "english": "Joseph", "verses": 111, "aliases": ["yusuf", "joseph"]},
+    {"id": 13, "name": "Ar-Ra'd", "english": "The Thunder", "verses": 43, "aliases": ["rad", "thunder", "thethunder", "arrad"]},
+    {"id": 14, "name": "Ibrahim", "english": "Abraham", "verses": 52, "aliases": ["ibrahim", "abraham"]},
+    {"id": 15, "name": "Al-Hijr", "english": "The Rocky Tract", "verses": 99, "aliases": ["hijr", "rocky", "rockytract", "stoneland", "thestoneland", "alhijr"]},
+    {"id": 16, "name": "An-Nahl", "english": "The Bee", "verses": 128, "aliases": ["nahl", "bee", "thebee", "annahl"]},
+    {"id": 17, "name": "Al-Isra", "english": "The Night Journey", "verses": 111, "aliases": ["isra", "nightjourney", "thenightjourney", "alisra", "subhan", "baniisrail", "childrenofisrael"]},
+    {"id": 18, "name": "Al-Kahf", "english": "The Cave", "verses": 110, "aliases": ["kahf", "cave", "thecave", "alkahf"]},
+    {"id": 19, "name": "Maryam", "english": "Mary", "verses": 98, "aliases": ["maryam", "mary"]},
+    {"id": 20, "name": "Ta-Ha", "english": "Ta-Ha", "verses": 135, "aliases": ["taha"]},
+    {"id": 21, "name": "Al-Anbiya", "english": "The Prophets", "verses": 112, "aliases": ["anbiya", "prophets", "theprophets", "alanbiya"]},
+    {"id": 22, "name": "Al-Hajj", "english": "The Pilgrimage", "verses": 78, "aliases": ["hajj", "pilgrimage", "thepilgrimage", "alhajj"]},
+    {"id": 23, "name": "Al-Mu'minun", "english": "The Believers", "verses": 118, "aliases": ["muminun", "believers", "thebelievers", "almuminun"]},
+    {"id": 24, "name": "An-Nur", "english": "The Light", "verses": 64, "aliases": ["nur", "light", "thelight", "annur"]},
+    {"id": 25, "name": "Al-Furqan", "english": "The Criterion", "verses": 77, "aliases": ["furqan", "criterion", "thecriterion", "alfurqan"]},
+    {"id": 26, "name": "Ash-Shu'ara", "english": "The Poets", "verses": 227, "aliases": ["shuara", "poets", "thepoets", "ashshuara"]},
+    {"id": 27, "name": "An-Naml", "english": "The Ant", "verses": 93, "aliases": ["naml", "ant", "theant", "annaml"]},
+    {"id": 28, "name": "Al-Qasas", "english": "The Stories", "verses": 88, "aliases": ["qasas", "stories", "thestories", "alqasas"]},
+    {"id": 29, "name": "Al-Ankabut", "english": "The Spider", "verses": 69, "aliases": ["ankabut", "spider", "thespider", "alankabut"]},
+    {"id": 30, "name": "Ar-Rum", "english": "The Romans", "verses": 60, "aliases": ["rum", "romans", "theromans", "arrum", "rome", "therome"]},
+    {"id": 31, "name": "Luqman", "english": "Luqman", "verses": 34, "aliases": ["luqman"]},
+    {"id": 32, "name": "As-Sajdah", "english": "The Prostration", "verses": 30, "aliases": ["sajdah", "prostration", "theprostration", "assajdah"]},
+    {"id": 33, "name": "Al-Ahzab", "english": "The Combined Forces", "verses": 73, "aliases": ["ahzab", "combinedforces", "thecombinedforces", "allies", "theallies", "clans", "theclans", "alahzab"]},
+    {"id": 34, "name": "Saba", "english": "Sheba", "verses": 54, "aliases": ["saba", "sheba"]},
+    {"id": 35, "name": "Fatir", "english": "Originator", "verses": 45, "aliases": ["fatir", "originator", "creator", "thecreator", "malaikah", "angels", "theangels"]},
+    {"id": 36, "name": "Ya-Sin", "english": "Ya-Sin", "verses": 83, "aliases": ["yasin", "yasheen"]},
+    {"id": 37, "name": "As-Saffat", "english": "Those who set the Ranks", "verses": 182, "aliases": ["saffat", "ranks", "thosewhosettheranks", "thosearrangedinranks", "assaffat"]},
+    {"id": 38, "name": "Sad", "english": "The Letter Sad", "verses": 88, "aliases": ["sad"]},
+    {"id": 39, "name": "Az-Zumar", "english": "The Troops", "verses": 75, "aliases": ["zumar", "troops", "thetroops", "crowds", "thecrowds", "groups", "thegroups", "azzumar"]},
+    {"id": 40, "name": "Ghafir", "english": "The Forgiver", "verses": 85, "aliases": ["ghafir", "forgiver", "theforgiver", "mumin", "believer", "thebeliever"]},
+    {"id": 41, "name": "Fussilat", "english": "Explained in Detail", "verses": 54, "aliases": ["fussilat", "explainedindetail", "hamimsajdah"]},
+    {"id": 42, "name": "Ash-Shura", "english": "The Consultation", "verses": 53, "aliases": ["shura", "consultation", "theconsultation", "council", "thecouncil", "ashshura"]},
+    {"id": 43, "name": "Az-Zukhruf", "english": "The Ornaments of Gold", "verses": 89, "aliases": ["zukhruf", "ornaments", "ornamentsofgold", "goldornaments", "azzukhruf"]},
+    {"id": 44, "name": "Ad-Dukhan", "english": "The Smoke", "verses": 59, "aliases": ["dukhan", "smoke", "thesmoke", "addukhan"]},
+    {"id": 45, "name": "Al-Jathiyah", "english": "The Crouching", "verses": 37, "aliases": ["jathiyah", "crouching", "thecrouching", "kneeling", "thekneeling", "aljathiyah"]},
+    {"id": 46, "name": "Al-Ahqaf", "english": "The Wind-Curved Sandhills", "verses": 35, "aliases": ["ahqaf", "windcurvedsandhills", "sandhills", "thesandhills", "alahqaf"]},
+    {"id": 47, "name": "Muhammad", "english": "Muhammad", "verses": 38, "aliases": ["muhammad"]},
+    {"id": 48, "name": "Al-Fath", "english": "The Victory", "verses": 29, "aliases": ["fath", "victory", "thevictory", "alfath"]},
+    {"id": 49, "name": "Al-Hujurat", "english": "The Dwellings", "verses": 18, "aliases": ["hujurat", "dwellings", "thedwellings", "chambers", "thechambers", "privatechambers", "alhujurat"]},
+    {"id": 50, "name": "Qaf", "english": "The Letter Qaf", "verses": 45, "aliases": ["qaf"]},
+    {"id": 51, "name": "Adh-Dhariyat", "english": "The Winnowing Winds", "verses": 60, "aliases": ["dhariyat", "winnowingwinds", "winds", "thedustscatteringwinds", "adhdhariyat"]},
+    {"id": 52, "name": "At-Tur", "english": "The Mount", "verses": 49, "aliases": ["tur", "mount", "themount", "attur"]},
+    {"id": 53, "name": "An-Najm", "english": "The Star", "verses": 62, "aliases": ["najm", "star", "thestar", "annajm"]},
+    {"id": 54, "name": "Al-Qamar", "english": "The Moon", "verses": 55, "aliases": ["qamar", "moon", "themoon", "alqamar"]},
+    {"id": 55, "name": "Ar-Rahman", "english": "The Beneficent", "verses": 78, "aliases": ["rahman", "beneficent", "merciful", "themerciful", "theentirelymerciful", "thebeneficent", "arrahman"]},
+    {"id": 56, "name": "Al-Waqi'ah", "english": "The Inevitable", "verses": 96, "aliases": ["waqiah", "inevitable", "theinevitable", "theevent", "alwaqiah"]},
+    {"id": 57, "name": "Al-Hadid", "english": "The Iron", "verses": 29, "aliases": ["hadid", "iron", "theiron", "alhadid"]},
+    {"id": 58, "name": "Al-Mujadilah", "english": "The Pleading Woman", "verses": 22, "aliases": ["mujadilah", "pleading", "pleadingwoman", "shethatdisputes", "thepleadingwoman", "almujadilah"]},
+    {"id": 59, "name": "Al-Hashr", "english": "The Exile", "verses": 24, "aliases": ["hashr", "exile", "banishment", "gathering", "thegathering", "theexile", "alhashr"]},
+    {"id": 60, "name": "Al-Mumtahanah", "english": "She that is to be examined", "verses": 13, "aliases": ["mumtahanah", "shethatistobeexamined", "examined", "thewomanexamined", "almumtahanah"]},
+    {"id": 61, "name": "As-Saff", "english": "The Ranks", "verses": 14, "aliases": ["saff", "ranks", "battlearray", "theranks", "assaff"]},
+    {"id": 62, "name": "Al-Jumu'ah", "english": "The Congregation", "verses": 11, "aliases": ["jumuah", "congregation", "friday", "thecongregation", "aljumuah"]},
+    {"id": 63, "name": "Al-Munafiqun", "english": "The Hypocrites", "verses": 11, "aliases": ["munafiqun", "hypocrites", "thehypocrites", "almunafiqun"]},
+    {"id": 64, "name": "At-Taghabun", "english": "The Mutual Disillusion", "verses": 18, "aliases": ["taghabun", "mutualdisillusion", "mutualdeprivation", "lossandgain", "attaghabun"]},
+    {"id": 65, "name": "At-Talaq", "english": "The Divorce", "verses": 12, "aliases": ["talaq", "divorce", "thedivorce", "attalaq"]},
+    {"id": 66, "name": "At-Tahrim", "english": "The Prohibition", "verses": 12, "aliases": ["tahrim", "prohibition", "theprohibition", "attahrim"]},
+    {"id": 67, "name": "Al-Mulk", "english": "The Sovereignty", "verses": 30, "aliases": ["mulk", "sovereignty", "dominion", "thedominion", "kingdom", "thekingdom", "control", "almulk"]},
+    {"id": 68, "name": "Al-Qalam", "english": "The Pen", "verses": 52, "aliases": ["qalam", "pen", "thepen", "alqalam", "nun"]},
+    {"id": 69, "name": "Al-Haqqah", "english": "The Reality", "verses": 52, "aliases": ["haqqah", "reality", "theinevitablereality", "thetruth", "theindubitabletruth", "alhaqqah"]},
+    {"id": 70, "name": "Al-Ma'arij", "english": "The Ascending Stairways", "verses": 44, "aliases": ["maarij", "ascendingstairways", "waysofascent", "theascendingstairways", "almaarij"]},
+    {"id": 71, "name": "Nuh", "english": "Noah", "verses": 28, "aliases": ["nuh", "noah"]},
+    {"id": 72, "name": "Al-Jinn", "english": "The Jinn", "verses": 28, "aliases": ["jinn", "thejinn", "aljinn"]},
+    {"id": 73, "name": "Al-Muzzammil", "english": "The Enshrouded One", "verses": 20, "aliases": ["muzzammil", "enshroudedone", "wrappedingarments", "theenshroudedone", "almuzzammil"]},
+    {"id": 74, "name": "Al-Muddaththir", "english": "The Cloaked One", "verses": 56, "aliases": ["muddaththir", "cloakedone", "thecloakedone", "theoneenwrapped", "almuddaththir"]},
+    {"id": 75, "name": "Al-Qiyamah", "english": "The Resurrection", "verses": 40, "aliases": ["qiyamah", "resurrection", "theresurrection", "alqiyamah"]},
+    {"id": 76, "name": "Al-Insan", "english": "The Man", "verses": 31, "aliases": ["insan", "man", "human", "time", "theman", "alinsan", "dahr"]},
+    {"id": 77, "name": "Al-Mursalat", "english": "Those Sent Forth", "verses": 50, "aliases": ["mursalat", "thosesentforth", "theemissaries", "almursalat"]},
+    {"id": 78, "name": "An-Naba", "english": "The Tidings", "verses": 40, "aliases": ["naba", "tidings", "greatnews", "thenews", "annaba"]},
+    {"id": 79, "name": "An-Nazi'at", "english": "Those who drag forth", "verses": 46, "aliases": ["naziat", "thosewhodragforth", "thesnatchers", "thosewhoyankout", "annaziat"]},
+    {"id": 80, "name": "'Abasa", "english": "He Frowned", "verses": 42, "aliases": ["abasa", "hefrowned", "frowned"]},
+    {"id": 81, "name": "At-Takwir", "english": "The Overthrowing", "verses": 29, "aliases": ["takwir", "overthrowing", "foldingup", "theshrouding", "thefoldingup", "attakwir"]},
+    {"id": 82, "name": "Al-Infitar", "english": "The Cleaving", "verses": 19, "aliases": ["infitar", "cleaving", "splitting", "thecleavingasunder", "alinfitar"]},
+    {"id": 83, "name": "Al-Mutaffifin", "english": "The Defrauders", "verses": 36, "aliases": ["mutaffifin", "defrauders", "thosewhogiveshortmeasure", "almutaffifin"]},
+    {"id": 84, "name": "Al-Inshiqaq", "english": "The Sundering", "verses": 25, "aliases": ["inshiqaq", "sundering", "splittingasunder", "thesplittingasunder", "alinshiqaq"]},
+    {"id": 85, "name": "Al-Buruj", "english": "The Mansions of the Stars", "verses": 22, "aliases": ["buruj", "mansions", "constellations", "greatstars", "thestars", "alburuj"]},
+    {"id": 86, "name": "At-Tariq", "english": "The Night-Comer", "verses": 17, "aliases": ["tariq", "nightcomer", "morningstar", "thenightcomer", "attariq"]},
+    {"id": 87, "name": "Al-A'la", "english": "The Most High", "verses": 19, "aliases": ["ala", "mosthigh", "themosthigh", "alala"]},
+    {"id": 88, "name": "Al-Ghashiyah", "english": "The Overwhelming", "verses": 26, "aliases": ["ghashiyah", "overwhelming", "theoverwhelming", "thepall", "alghashiyah"]},
+    {"id": 89, "name": "Al-Fajr", "english": "The Dawn", "verses": 30, "aliases": ["fajr", "dawn", "thedawn", "alfajr"]},
+    {"id": 90, "name": "Al-Balad", "english": "The City", "verses": 20, "aliases": ["balad", "city", "thecity", "theland", "albalad"]},
+    {"id": 91, "name": "Ash-Shams", "english": "The Sun", "verses": 15, "aliases": ["shams", "sun", "thesun", "ashshams"]},
+    {"id": 92, "name": "Al-Layl", "english": "The Night", "verses": 21, "aliases": ["layl", "night", "thenight", "allayl"]},
+    {"id": 93, "name": "Ad-Duha", "english": "The Morning Hours", "verses": 11, "aliases": ["duha", "morninghours", "forenoon", "themorninghours", "adduha"]},
+    {"id": 94, "name": "Ash-Sharh", "english": "The Relief", "verses": 8, "aliases": ["sharh", "relief", "solace", "openingup", "expansion", "ashsharh", "inshirah"]},
+    {"id": 95, "name": "At-Tin", "english": "The Fig", "verses": 8, "aliases": ["tin", "fig", "thefig", "attin"]},
+    {"id": 96, "name": "Al-'Alaq", "english": "The Clot", "verses": 19, "aliases": ["alaq", "clot", "germcell", "clingingspot", "read", "alalaq", "iqra"]},
+    {"id": 97, "name": "Al-Qadr", "english": "The Power", "verses": 5, "aliases": ["qadr", "power", "decree", "nightofpower", "destiny", "alqadr"]},
+    {"id": 98, "name": "Al-Bayyinah", "english": "The Clear Proof", "verses": 8, "aliases": ["bayyinah", "clearproof", "evidence", "theclearproof", "albayyinah"]},
+    {"id": 99, "name": "Az-Zalzalah", "english": "The Earthquake", "verses": 8, "aliases": ["zalzalah", "earthquake", "theearthquake", "azzalzalah", "zilzal"]},
+    {"id": 100, "name": "Al-'Adiyat", "english": "The Courser", "verses": 11, "aliases": ["adiyat", "courser", "chargers", "therunners", "aladiyat"]},
+    {"id": 101, "name": "Al-Qari'ah", "english": "The Calamity", "verses": 11, "aliases": ["qariah", "calamity", "strikinghour", "disaster", "thestrikinghour", "alqariah"]},
+    {"id": 102, "name": "At-Takathur", "english": "The Rivalry in World Increase", "verses": 8, "aliases": ["takathur", "rivalry", "worldincrease", "competition", "pilingup", "attakathur"]},
+    {"id": 103, "name": "Al-'Asr", "english": "The Declining Day", "verses": 3, "aliases": ["asr", "decliningday", "time", "theafternoon", "alasr"]},
+    {"id": 104, "name": "Al-Humazah", "english": "The Traducer", "verses": 9, "aliases": ["humazah", "traducer", "slanderer", "theslanderer", "alhumazah"]},
+    {"id": 105, "name": "Al-Fil", "english": "The Elephant", "verses": 5, "aliases": ["fil", "elephant", "theelephant", "alfil"]},
+    {"id": 106, "name": "Quraysh", "english": "Quraysh", "verses": 4, "aliases": ["quraysh", "koreish"]},
+    {"id": 107, "name": "Al-Ma'un", "english": "The Small Kindnesses", "verses": 7, "aliases": ["maun", "smallkindnesses", "almsgiving", "assistance", "almaun"]},
+    {"id": 108, "name": "Al-Kauthar", "english": "The Abundance", "verses": 3, "aliases": ["kauthar", "abundance", "plenty", "alkauthar"]},
+    {"id": 109, "name": "Al-Kafirun", "english": "The Disbelievers", "verses": 6, "aliases": ["kafirun", "disbelievers", "theunbelievers", "alkafirun"]},
+    {"id": 110, "name": "An-Nasr", "english": "The Divine Support", "verses": 3, "aliases": ["nasr", "support", "victory", "help", "annasr"]},
+    {"id": 111, "name": "Al-Masad", "english": "The Palm Fiber", "verses": 5, "aliases": ["masad", "palmfiber", "lahab", "flame", "almasad"]},
+    {"id": 112, "name": "Al-Ikhlas", "english": "The Sincerity", "verses": 4, "aliases": ["ikhlas", "sincerity", "purity", "monotheism", "alikhlas", "tauhid"]},
+    {"id": 113, "name": "Al-Falaq", "english": "The Daybreak", "verses": 5, "aliases": ["falaq", "daybreak", "risingdawn", "alfalaq"]},
+    {"id": 114, "name": "An-Nas", "english": "Mankind", "verses": 6, "aliases": ["nas", "mankind", "men", "people", "annas"]}
+]
+
+def normalize_name(name):
+    """Normalize a name to standard search key format (lowercase, alpha-only, no prefixes)."""
+    name = name.lower()
+    # Remove leading 'the '
+    if name.startswith("the "):
+        name = name[4:]
+    # Remove common Arabic prefixes
+    name = re.sub(r'^(al|an|ash|ar|at|ad|az|el|as|al-|an-|ash-|ar-|at-|ad-|az-|el-|as-)', '', name)
+    # Remove all non-alphanumeric characters
+    name = re.sub(r'[^a-z0-9]', '', name)
+    return name
+
+def find_surah(query):
+    """
+    Find a surah based on the query string.
+    Can match:
+      - Numeric ID (1-114)
+      - Transliterated name (exact or substring)
+      - English translation (exact or substring)
+      - Alias keys (exact or substring)
+      - Fuzzy matches as fallback
+    Returns:
+      - A dictionary (if exact/unique match)
+      - A list of dictionaries (if multiple matches/suggestions)
+      - None (if no match)
+    """
+    # 1. Try numeric ID
+    if query.isdigit():
+        num = int(query)
+        if 1 <= num <= 114:
+            return next(s for s in SURAHS if s["id"] == num)
+        return None
+
+    query_norm = normalize_name(query)
+    if not query_norm:
+        return None
+
+    # 2. Try exact normalized match
+    for s in SURAHS:
+        if normalize_name(s["name"]) == query_norm or normalize_name(s["english"]) == query_norm:
+            return s
+        for alias in s["aliases"]:
+            if normalize_name(alias) == query_norm:
+                return s
+
+    # 3. Try substring match (case-insensitive)
+    substring_matches = []
+    for s in SURAHS:
+        if (query_norm in normalize_name(s["name"]) or 
+            query_norm in normalize_name(s["english"]) or
+            any(query_norm in normalize_name(alias) for alias in s["aliases"])):
+            substring_matches.append(s)
+            
+    if len(substring_matches) == 1:
+        return substring_matches[0]
+    elif len(substring_matches) > 1:
+        return substring_matches
+
+    # 4. Fuzzy fallback match
+    # Map normalized names back to surah dicts
+    name_map = {}
+    for s in SURAHS:
+        name_map[normalize_name(s["name"])] = s
+        name_map[normalize_name(s["english"])] = s
+        for alias in s["aliases"]:
+            name_map[normalize_name(alias)] = s
+
+    all_names = list(name_map.keys())
+    close_matches = difflib.get_close_matches(query_norm, all_names, n=3, cutoff=0.5)
+
+    if close_matches:
+        suggested_surahs = []
+        seen_ids = set()
+        for match in close_matches:
+            surah = name_map[match]
+            if surah["id"] not in seen_ids:
+                suggested_surahs.append(surah)
+                seen_ids.add(surah["id"])
+        return suggested_surahs
+
+    return None
+
+def parse_query(args_string):
+    """
+    Parse a query string like "2:255", "2:255-256", "fatihah 2", "cow:255-256"
+    Returns:
+      (chapter_query_str, verse_start, verse_end)
+      verse_start and verse_end can be None if not specified.
+    """
+    args_string = args_string.strip()
+    
+    # Matches: chapter separator verse [range]
+    # e.g., "2:255", "2:255-256", "al-baqarah 255", "al-baqarah: 255-256"
+    pattern = r'^(.+?)(?:\s*:\s*|\s+)(\d+)(?:\s*-\s*(\d+))?$'
+    match = re.match(pattern, args_string)
+    if match:
+        chapter_part = match.group(1).strip()
+        verse_start = int(match.group(2))
+        verse_end = int(match.group(3)) if match.group(3) else verse_start
+        return chapter_part, verse_start, verse_end
+
+    # Simple chapter-only query
+    return args_string, None, None
+
+def get_json_path():
+    """Resolve database path, copy from workspace if needed, or download it."""
+    home = os.path.expanduser("~")
+    local_path = os.path.join(home, ".local", "share", "quran", "eng-ummmuhammad.json")
+    
+    if os.path.exists(local_path):
+        return local_path
+        
+    # Create target directory
+    os.makedirs(os.path.dirname(local_path), exist_ok=True)
+    
+    # Try same directory as script (portable clone)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    sibling_path = os.path.join(script_dir, "eng-ummmuhammad.json")
+    if os.path.exists(sibling_path):
+        try:
+            import shutil as sh
+            sh.copy(sibling_path, local_path)
+            return local_path
+        except Exception:
+            pass
+            
+    # Try workspace copy
+    workspace_path = "/home/razim/quran-app/eng-ummmuhammad.json"
+    if os.path.exists(workspace_path):
+        try:
+            import shutil as sh
+            sh.copy(workspace_path, local_path)
+            return local_path
+        except Exception:
+            pass
+            
+    # Try online download
+    url = "https://raw.githubusercontent.com/fawazahmed0/quran-api/1/editions/eng-ummmuhammad.json"
+    print(f"\033[1;33mQuran database not found. Downloading Sahih International translation...\033[0m")
+    try:
+        import urllib.request
+        response = urllib.request.urlopen(url)
+        data = response.read()
+        with open(local_path, 'wb') as f:
+            f.write(data)
+        print(f"\033[1;32mDatabase setup successful! Saved to {local_path}\033[0m\n")
+        return local_path
+    except Exception as e:
+        print(f"\033[1;31mError downloading translation database: {e}\033[0m")
+        print("\033[1;31mPlease check your internet connection or place the 'eng-ummmuhammad.json' file manually.\033[0m")
+        sys.exit(1)
+
+# Global variables for indexing
+_quran_index = None
+
+def get_quran_index():
+    """Load and index translation verses."""
+    global _quran_index
+    if _quran_index is not None:
+        return _quran_index
+
+    path = get_json_path()
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"\033[1;31mError reading translation database: {e}\033[0m")
+        sys.exit(1)
+
+    verses = data.get('quran', [])
+    db = {}
+    for v in verses:
+        ch = v['chapter']
+        ver = v['verse']
+        txt = v['text']
+        if ch not in db:
+            db[ch] = {}
+        db[ch][ver] = txt
+
+    # Shift Fatihah (Chapter 1) so Alhamdulillah is counted as Verse 1
+    if 1 in db:
+        fatihah_shifted = {
+            1: "[All] praise is [due] to Allah, Lord of the worlds -",
+            2: "The Entirely Merciful, the Especially Merciful,",
+            3: "Sovereign of the Day of Recompense.",
+            4: "It is You we worship and You we ask for help.",
+            5: "Guide us to the straight path -",
+            6: "The path of those upon whom You have bestowed favor,",
+            7: "not of those who have evoked [Your] anger or of those who are astray."
+        }
+        db[1] = fatihah_shifted
+
+    _quran_index = db
+    return db
+
+def print_verse(chapter_num, verse_num, text, surah_name):
+    """Nicely print wrapped and colorized verse."""
+    term_width = shutil.get_terminal_size((80, 20)).columns
+    wrap_width = max(40, min(term_width - 8, 100))
+    
+    # Verse location label
+    prefix = f"\033[1;33m[{chapter_num}:{verse_num}]\033[0m "
+    
+    # Indentation for lines after the first
+    indent = " " * len(f"[{chapter_num}:{verse_num}] ")
+    
+    wrapped = textwrap.fill(text, width=wrap_width, initial_indent="", subsequent_indent=indent)
+    print(f"{prefix}{wrapped}\n")
+
+def clean_html(html_text):
+    """Strip HTML tags, unescape entities, and clean up spacing for the terminal."""
+    text = html_text
+    # Convert block level tags to newlines
+    text = re.sub(r'</?(p|h1|h2|h3|h4|div|br|li|ul|ol)[^>]*>', '\n', text)
+    # Remove all other tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Unescape HTML entities
+    import html
+    text = html.unescape(text)
+    # Collapse multiple newlines
+    text = re.sub(r'\n\s*\n+', '\n\n', text)
+    return text.strip()
+
+def get_api_verse(chapter, verse):
+    """Map local verse to Kufan api.quran.com verse numbering for Chapter 1."""
+    if chapter == 1:
+        if verse in (6, 7):
+            return 7
+        return verse + 1
+    return verse
+
+def get_tafsir_text(chapter, verse, tafsir_id=169):
+    """Retrieve and clean Tafsir text for a specific Tafsir ID, using local cache or API."""
+    home = os.path.expanduser("~")
+    cache_dir = os.path.join(home, ".local", "share", "quran", "tafsir_cache")
+    os.makedirs(cache_dir, exist_ok=True)
+    cache_file = os.path.join(cache_dir, f"{chapter}_{verse}_{tafsir_id}.json")
+    
+    if os.path.exists(cache_file):
+        try:
+            with open(cache_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return clean_html(data.get('tafsir', {}).get('text', ''))
+        except Exception:
+            pass
+            
+    # Fetch from API using mapped verse
+    api_verse = get_api_verse(chapter, verse)
+    url = f"https://api.quran.com/api/v4/tafsirs/{tafsir_id}/by_ayah/{chapter}:{api_verse}"
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            url, 
+            headers={'User-Agent': 'Mozilla/5.0'}
+        )
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.load(response)
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False)
+            return clean_html(data.get('tafsir', {}).get('text', ''))
+    except Exception as e:
+        return f"\033[1;31m[Error fetching Tafsir: {e}. Please check your internet connection.]\033[0m"
+
+def display_verses(surah, verse_start=None, verse_end=None, show_tafsir=False):
+    """Query database and print results with custom pager."""
+    ch_id = surah["id"]
+    db = get_quran_index()
+    
+    if ch_id not in db:
+        print(f"\033[1;31mError: Translation data for Chapter {ch_id} not found.\033[0m")
+        return
+        
+    ch_data = db[ch_id]
+    
+    # Determine bounds
+    if verse_start is None:
+        v_start = 1
+        v_end = surah["verses"]
+        title = f"Surah {surah['name']} ({surah['english']})"
+    else:
+        v_start = verse_start
+        v_end = verse_end
+        if v_start == v_end:
+            title = f"Surah {surah['name']} ({surah['english']}) — Verse {v_start}"
+        else:
+            title = f"Surah {surah['name']} ({surah['english']}) — Verses {v_start} to {v_end}"
+
+    # Print beautiful header
+    print(f"\033[1;36m{'=' * min(60, shutil.get_terminal_size().columns)}\033[0m")
+    print(f"\033[1;32m{title}\033[0m")
+    print(f"\033[1;30mChapter {surah['id']} | Total Verses: {surah['verses']}\033[0m")
+    print(f"\033[1;36m{'=' * min(60, shutil.get_terminal_size().columns)}\033[0m\n")
+
+    # Center the Bismillah if starting from verse 1 (except Chapter 9 which does not have it)
+    if v_start == 1 and ch_id != 9:
+        bismillah = "In the name of Allah, the Entirely Merciful, the Especially Merciful"
+        term_width = shutil.get_terminal_size((80, 20)).columns
+        print(f"\033[1;36m{bismillah.center(term_width)}\033[0m\n")
+
+    is_tty = sys.stdout.isatty()
+    term_height = shutil.get_terminal_size((80, 24)).lines
+    page_size = max(5, term_height - 6)
+    
+    accumulated_lines = 0
+    for v_num in range(v_start, v_end + 1):
+        if v_num not in ch_data:
+            continue
+            
+        text = ch_data[v_num]
+        
+        # Calculate screen lines for pagination
+        term_width = shutil.get_terminal_size((80, 20)).columns
+        wrap_width = max(40, min(term_width - 8, 100))
+        verse_lines = len(textwrap.wrap(text, width=wrap_width)) + 1 # +1 for empty line spacer
+        
+        # Approximate lines for Tafsir if displayed (3 sources)
+        tafsir_lines = 0
+        if show_tafsir:
+            tafsir_lines = 30
+            
+        if is_tty and accumulated_lines > 0 and accumulated_lines + verse_lines + tafsir_lines > page_size:
+            try:
+                prompt = "\033[1;30m--- Press Enter for more, Q to quit ---\033[0m"
+                ans = input(prompt).strip().lower()
+                if ans == 'q':
+                    print()
+                    return
+                # Clear the prompt line to keep output neat
+                sys.stdout.write("\033[F\033[K")
+            except (KeyboardInterrupt, EOFError):
+                print()
+                return
+            accumulated_lines = 0
+            
+        print_verse(ch_id, v_num, text, surah["name"])
+        accumulated_lines += verse_lines
+        
+        if show_tafsir:
+            tafsir_sources = [
+                (817, "Tazkirul Quran", "\033[1;33m"),
+                (169, "Tafsir Ibn Kathir", "\033[1;35m"),
+                (168, "Ma'arif al-Qur'an", "\033[1;34m"),
+            ]
+            for t_id, t_name, t_color in tafsir_sources:
+                print(f"   {t_color}--- {t_name} ---\033[0m")
+                tafsir_text = get_tafsir_text(ch_id, v_num, t_id)
+                
+                paragraphs = tafsir_text.split('\n\n')
+                wrapped_paragraphs = []
+                for p in paragraphs:
+                    if p.strip():
+                        wrapped_p = textwrap.fill(p.strip(), width=wrap_width, initial_indent="   ", subsequent_indent="   ")
+                        wrapped_paragraphs.append(wrapped_p)
+                
+                full_tafsir_formatted = "\n\n".join(wrapped_paragraphs)
+                print(f"{full_tafsir_formatted}\n")
+                
+                # Recalculate exact lines used by Tafsir
+                actual_tafsir_lines = sum(len(textwrap.wrap(p.strip(), width=wrap_width)) for p in paragraphs if p.strip()) + len(paragraphs)*2 + 2
+                accumulated_lines += actual_tafsir_lines
+                
+            print(f"\033[1;36m   {'=' * min(40, term_width - 8)}\033[0m\n")
+            accumulated_lines += 2
+
+def print_surah_list():
+    """Print all 114 Surahs in columns mapped dynamically to terminal width."""
+    term_width = shutil.get_terminal_size((80, 20)).columns
+    col_width = 28
+    num_cols = max(1, term_width // col_width)
+    
+    import math
+    num_rows = math.ceil(114 / num_cols)
+    
+    print("\033[1;32mChapters of the Qur'an:\033[0m")
+    print("\033[1;30mFormat: [No.] Name (Verses)\033[0m")
+    
+    for r in range(num_rows):
+        row_str = ""
+        for c in range(num_cols):
+            idx = r + c * num_rows
+            if idx < 114:
+                s = SURAHS[idx]
+                num_part = f"{s['id']:3d}."
+                name_part = f"{s['name']}"
+                verse_part = f"({s['verses']})"
+                
+                # Format cell beautifully with pads
+                cell = f"\033[1;33m{num_part}\033[0m \033[1;37m{name_part:<15}\033[0m \033[1;30m{verse_part:>5}\033[0m"
+                row_str += cell + "  "
+        print(row_str)
+    print()
+
+def print_help():
+    """Display CLI logo, usage descriptions, and command examples."""
+    logo = r"""
+\033[1;32m      ___  _   _ ____    _    _   _ 
+     / _ \| | | |  _ \  / \  | \ | |
+    | | | | | | | |_) |/ _ \ |  \| |
+    | |_| | |_| |  _ < / ___ \| |\  |
+     \__\_\\___/|_| \_/_/   \_\_| \_|
+\033[0m
+\033[1;36m       The Holy Qur'an - CLI Translation\033[0m
+""".replace(r'\033', '\033')
+    print(logo)
+    print("\033[1;37mUsage:\033[0m")
+    print("  \033[1;32mquran {chapter}\033[0m              Display an entire chapter")
+    print("  \033[1;32mquran {chapter}:{verse}\033[0m        Display a specific verse")
+    print("  \033[1;32mquran {chapter}:{start}-{end}\033[0m  Display a range of verses")
+    print("  \033[1;32mquran list\033[0m                    List all 114 chapters")
+    print("  \033[1;32mquran help\033[0m                    Show this help menu")
+    print("  \033[1;32mquran {query} -t / --tafsir\033[0m   Append scholarly exegeses (3 sources)")
+    print()
+    print("\033[1;37mNote:\033[0m \033[1;30m{chapter} can be a number (1-114) or a transliterated/English name.\033[0m")
+    print()
+    print("\033[1;37mExamples:\033[0m")
+    print("  \033[1;34mquran 1\033[0m                      Entire Surah Al-Fatihah")
+    print("  \033[1;34mquran fatihah\033[0m                Entire Surah Al-Fatihah by name")
+    print("  \033[1;34mquran \"the cow\"\033[0m              Entire Surah Al-Baqarah by English translation name")
+    print("  \033[1;34mquran 2:255\033[0m                  Ayat al-Kursi")
+    print("  \033[1;34mquran baqarah 255\033[0m            Ayat al-Kursi (space instead of colon)")
+    print("  \033[1;34mquran 108:1 -t\033[0m               Surah Al-Kauthar verse 1 with Tafsirs")
+    print("  \033[1;34mquran nas 1-3 --tafsir\033[0m       Surah An-Nas verses 1-3 with Tafsirs")
+    print()
+
+def main():
+    if len(sys.argv) == 1:
+        print_help()
+        print_surah_list()
+        return
+
+    # Check for Tafsir flags anywhere in arguments
+    show_tafsir = False
+    filtered_args = []
+    for arg in sys.argv[1:]:
+        if arg.lower() in ('-t', '--tafsir'):
+            show_tafsir = True
+        else:
+            filtered_args.append(arg)
+
+    if len(filtered_args) == 0:
+        print_help()
+        return
+
+    # Check for help flags
+    first_arg = filtered_args[0].lower().strip()
+    if first_arg in ('-h', '--help', 'help'):
+        print_help()
+        return
+        
+    if first_arg == 'list':
+        print_surah_list()
+        return
+
+    # Process search query
+    query_str = " ".join(filtered_args)
+    chapter_query, verse_start, verse_end = parse_query(query_str)
+    
+    # Lookup Surah
+    result = find_surah(chapter_query)
+    
+    if result is None:
+        print(f"\033[1;31mError: Chapter '{chapter_query}' not found.\033[0m")
+        print("Type \033[1;32mquran list\033[0m to see all available chapters.")
+        sys.exit(1)
+        
+    elif isinstance(result, list):
+        # Multiple matches / suggestions
+        print(f"\033[1;33mMultiple chapters matched your query '{chapter_query}':\033[0m")
+        for s in result:
+            print(f"  \033[1;32m{s['id']:3d}. {s['name']}\033[0m ({s['english']})")
+        print("\nPlease be more specific, or query by chapter number.")
+        sys.exit(1)
+        
+    else:
+        # Unique Surah found
+        surah = result
+        
+        # Validate verses if specified
+        if verse_start is not None:
+            max_verses = surah["verses"]
+            
+            if verse_start < 1 or verse_start > max_verses:
+                print(f"\033[1;31mError: Surah {surah['name']} only has {max_verses} verses.\033[0m")
+                print(f"You requested verse {verse_start}.")
+                sys.exit(1)
+                
+            if verse_end < 1 or verse_end > max_verses:
+                print(f"\033[1;31mError: Surah {surah['name']} only has {max_verses} verses.\033[0m")
+                print(f"You requested verse {verse_end}.")
+                sys.exit(1)
+                
+            if verse_start > verse_end:
+                print("\033[1;31mError: Start verse must be less than or equal to end verse.\033[0m")
+                print(f"You requested {verse_start}-{verse_end}.")
+                sys.exit(1)
+                
+        # Display the verses
+        display_verses(surah, verse_start, verse_end, show_tafsir)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\033[1;30mGoodbye!\033[0m")
+        sys.exit(0)

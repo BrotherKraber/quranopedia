@@ -1,0 +1,86 @@
+{
+    "3:190": {
+        "surah": "Ali 'Imran",
+        "verse": "3:190-191",
+        "arabic": "إِنَّ فِي خَلْقِ السَّمَاوَاتِ وَالْأَرْضِ وَاخْتِلَافِ اللَّيْلِ وَالنَّهَارِ لَآيَاتٍ لِّأُولِي الْأَلْبَابِ * الَّذِينَ يَذْكُرُونَ اللَّهَ قِيَامًا وَقُعُودًا وَعَلَىٰ جُنُوبِهِمْ وَيَتَفَكَّرُونَ فِي خَلْقِ السَّمَاوَاتِ وَالْأَرْضِ رَبَّنَا مَا خَلَقْتَ هَٰذَا بَاطِلًا سُبْحَانَكَ فَقِنَا عَذَابَ النَّارِ",
+        "translation": "Indeed, in the creation of the heavens and the earth and the alternation of the night and the day are signs for those of understanding - Who remember Allah while standing or sitting or [lying] on their sides and reflect on the creation of the heavens and the earth, [saying], 'Our Lord, You did not create this aimlessly; exalted are You [above such a thing]; then protect us from the punishment of the Fire.'",
+        "commentary": "This verse serves as the primary scriptural mandate for rationalism and natural philosophy in the Islamic tradition. Early Peripatetics like Al-Kindi and later jurist-philosophers like Ibn Rushd argued that the Quranic command to reflect (<i>yatafakkarun</i>) on the order of nature is a divine directive to study the physical sciences, astronomy, and mathematics. They argued that the natural order is a system of 'signs' (<i>ayat</i>) from which the human intellect (<i>Aql</i>) can logically deduce the existence, wisdom, and unity of the Creator."
+    },
+    "24:35": {
+        "surah": "An-Nur",
+        "verse": "24:35",
+        "arabic": "اللَّهُ نُورُ السَّمَاوَاتِ وَالْأَرْضِ ۚ مَثَلُ نُورِهِ كَمِشْكَاةٍ فِيهَا مِصْبَاحٌ ۖ الْمِصْبَاحُ فِي زُجَاجَةٍ ۖ الزُّجَاجَةُ كَأَنَّهَا كَوْكَبٌ دُرِّيٌّ يُوقَدُ مِن شَجَرَةٍ مُّبَارَكَةٍ زَيْتُونَةٍ لَّا شَرْقِيَّةٍ وَلَا غَرْبِيَّةٍ يَكَادُ زَيْتُهَا يُضِيءُ وَلَوْ لَمْ تَمْسَسْهُ نَارٌ ۚ نُّورٌ عَلَىٰ نُورٍ ۗ يَهْدِي اللَّهُ لِنُورِهِ مَن يَشَاءُ",
+        "translation": "Allah is the Light of the heavens and the earth. The example of His light is like a niche within which is a lamp, the lamp is within glass, the glass as if it were a pearly [white] star lit from [the oil of] a blessed olive tree, neither of the east nor of the west, whose oil would almost glow even if untouched by fire. Light upon light. Allah guides to His light whom He wills.",
+        "commentary": "Revered as the 'Verse of Light,' this is the metaphysical foundation of Shihab al-Din al-Suhrawardi's Illuminationist School (<i>Hikmat al-Ishraq</i>) and Al-Ghazali's mystical treatise <i>Mishkat al-Anwar</i> (The Niche of Lights). Suhrawardi de-anthropomorphized metaphysics by replacing the Aristotelian categories of 'substance' with 'Light' (<i>Nur</i>). He argued that God is the absolute 'Light of Lights' (<i>Nur al-Anwar</i>), from whom all spiritual intellects and physical forms emanate as varying gradations of light and darkness. The lamp, glass, and oil are interpreted allegorically as stages of the human intellect and its connection to the cosmic Active Intellect."
+    },
+    "28:88": {
+        "surah": "Al-Qasas",
+        "verse": "28:88",
+        "arabic": "كُلُّ شَيْءٍ هَالِكٌ إِلَّا وَجْهَهُ ۚ لَهُ الْحُكْمُ وَإِلَيْهِ تُرْجَعُونَ",
+        "translation": "Everything will be destroyed except His Face. His is the judgement, and to Him you will be returned.",
+        "commentary": "This verse was heavily cited in debates on ontology and contingency. Ibn Sina (Avicenna) used it to illustrate the difference between the physical cosmos and God: everything other than God is 'contingent in itself' (<i>mumkin al-wujud</i>), meaning it has no inherent right to exist and is, in its own nature, equivalent to nothingness or destruction. It only exists because God grants it existence. In Sufi metaphysics (Wahdat al-Wujud), Ibn Arabi interpreted this to mean that the manifest world has no independent existence; only the 'Face' (Essence) of God is real, and all else is a fleeting reflection."
+    },
+    "42:11": {
+        "surah": "Ash-Shura",
+        "verse": "42:11",
+        "arabic": "لَيْسَ كَمِثْلِهِ شَيْءٌ ۖ وَهُوَ السَّمِيعُ الْبَصِيرُ",
+        "translation": "There is nothing like unto Him, and He is the Hearing, the Seeing.",
+        "commentary": "This is the central battleground verse in Islamic theology (Kalam) concerning the attributes of God. The verse contains a creative tension: the first half establishes absolute transcendence (<i>Tanzih</i> - 'nothing is like Him'), while the second half affirms anthropomorphic attributes (Hearing and Seeing). The Mu'tazilites focused on the first half to argue that God has no distinct attributes, interpreting them metaphorically to protect divine unity. The Atharis (Traditionalists) and Ash'arites cited this to defend <i>bi-la kayfa</i>: affirming that God hears and sees, but in a way that does not resemble human hearing or sight."
+    },
+    "2:115": {
+        "surah": "Al-Baqarah",
+        "verse": "2:115",
+        "arabic": "وَلِلَّهِ الْمَشْرِقُ وَالْمَغْرِبُ ۚ فَأَيْنَمَا تُوَلُّوا فَثَمَّ وَجْهُ اللَّهِ ۚ إِنَّ اللَّهَ وَاسِعٌ عَلِيمٌ",
+        "translation": "And to Allah belongs the east and the west. So wherever you turn, there is the Face of Allah. Indeed, Allah is all-Encompassing and Knowing.",
+        "commentary": "This verse is a cornerstone of Sufi metaphysical ontology (Wahdat al-Wujud). Muhyiddin Ibn Arabi and his commentators used this verse to argue for the omnipresence of the Divine Presence. They asserted that the physical universe is not separate from God, but is the outer manifestation (<i>Zahir</i>) of the divine names. The 'Face of Allah' is the underlying reality of every object in existence; the spiritual seeker who achieves gnosis (<i>Irfan</i>) ceases to see physical objects as independent entities and instead perceives the divine light reflecting through them."
+    },
+    "8:17": {
+        "surah": "Al-Anfal",
+        "verse": "8:17",
+        "arabic": "فَلَمْ تَقْتُلُوهُمْ وَلَٰكِنَّ اللَّهَ قَتَلَهُمْ ۚ وَمَا رَمَيْتَ إِذْ رَمَيْتَ وَلٰكِنَّ اللَّهَ رَمَىٰ",
+        "translation": "And you did not kill them, but it was Allah who killed them. And you threw not when you threw, but it was Allah who threw.",
+        "commentary": "This verse is the primary scriptural justification for the Ash'arite doctrine of **Occasionalism** and Al-Ghazali's critique of natural causality. Al-Ghazali argued that natural objects do not possess inherent causal powers (e.g. fire does not cause burning, a human hand does not cause throwing). Since the Quran explicitly states 'you threw not... but Allah threw,' it demonstrates that God is the sole efficient cause in the universe. God creates the action of throwing and the effect of the stone flying simultaneously, creating the illusion of human causality."
+    },
+    "89:27": {
+        "surah": "Al-Fajr",
+        "verse": "89:27-28",
+        "arabic": "يَا أَيَّتُهَا النَّفْسُ الْمُطْمَئِنَّةُ * ارْجِعِي إِلَىٰ رَبِّكِ رَاضِيَةً مَّرْضِيَّةً",
+        "translation": "O reassured soul, Return to your Lord, well-pleased and pleasing [to Him],",
+        "commentary": "In Peripatetic psychology, Ibn Sina (Avicenna) referenced the 'tranquil soul' (<i>al-nafs al-mutma'innah</i>) to describe the highest level of human psychological development. He argued that the human soul evolves from its initial vegetative and animal states into a rational intellect. When the rational intellect successfully disciplines the physical passions and connects with the cosmic Active Intellect, it achieves absolute peace and intellectual certainty, entering the state described in this verse."
+    },
+    "59:2": {
+        "surah": "Al-Hashr",
+        "verse": "59:2",
+        "arabic": "فَاعْتَبِرُوا يَا أُولِي الْأَبْصَارِ",
+        "translation": "Reflect, O people of vision.",
+        "commentary": "This verse is the foundational legal proof used by Ibn Rushd (Averroes) in <i>The Decisive Treatise</i> to argue that philosophy is commanded by Islamic law. Ibn Rushd, acting as a supreme judge, performed a linguistic and legal analysis of the word <i>i'tibar</i> ('reflect'). He argued that <i>i'tibar</i> means to deduce the unknown from the known, which is the exact definition of a logical syllogism. Therefore, the Quranic command to reflect is a legal mandate to study formal logic and demonstrative philosophy."
+    },
+    "48:10": {
+        "surah": "Al-Fath",
+        "verse": "48:10",
+        "arabic": "إِنَّ الَّذِينَ يُبَايِعُونَكَ إِنَّمَا يُبَايِعُونَ اللَّهَ يَدُ اللَّهِ فَوْقَ أَيْدِيهِمْ",
+        "translation": "Indeed, those who pledge allegiance to you - they are actually pledging allegiance to Allah. The hand of Allah is over their hands.",
+        "commentary": "A key theological battleground verse. Early rationalist theologians (Mu'tazilites) argued that attributing a physical 'Hand' (<i>Yad</i>) to God violates His absolute incorporeality, interpreting it allegorically as 'power' or 'blessing.' Traditionalist theologians (Atharis) rejected this interpretation as speculative alteration (<i>tahrif</i>), arguing that the companions of the Prophet accepted the text literally as written, affirming that God has a Hand in a manner that fits His majesty, without asking how (<i>bi-la kayfa</i>)."
+    },
+    "20:5": {
+        "surah": "Taha",
+        "verse": "20:5",
+        "arabic": "الرَّحْمَٰنُ عَلَى الْعَرْشِ اسْتَوَىٰ",
+        "translation": "The Most Merciful rose over the Throne.",
+        "commentary": "This verse is the center of the classical debates on divine anthropomorphism (<i>Tashbih</i>) and transcendence (<i>Tanzih</i>). The term <i>istawa</i> ('rose' or 'established') was interpreted by Ash'arite and Mu'tazilite theologians metaphorically as <i>istawla</i> ('conquered' or 'ruled') to avoid localizing God in space. Ahmad ibn Hanbal and the Athari traditionalists fiercely rejected this, asserting that God rose over the Throne literally as He stated, but without physical contact, localization, or likeness to creation, leaving the modality (<i>kayfiyyah</i>) unknown to human reason."
+    },
+    "34:3": {
+        "surah": "Saba",
+        "verse": "34:3",
+        "arabic": "لَا يَعْزُبُ عَنْهُ مِثْقَالُ ذَرَّةٍ فِي السَّمَاوَاتِ وَلَا فِي الْأَرْضِ",
+        "translation": "Not absent from Him is an atom's weight within the heavens or within the earth.",
+        "commentary": "Cited by Al-Ghazali in <i>The Incoherence of the Philosophers</i> to charge Ibn Sina and Al-Farabi with heresy (<i>Kufr</i>). Ibn Sina had argued that God, being absolute and simple, does not have temporal, changing knowledge of individual events (particulars) directly, but knows them only in a 'universal manner' as the cause of all causes. Al-Ghazali argued that this philosophical position directly contradicts the literal meaning of this verse, which asserts that God is aware of the exact weight of every individual atom."
+    },
+    "57:3": {
+        "surah": "Al-Hadid",
+        "verse": "57:3",
+        "arabic": "هُوَ الْأَوَّلُ وَالْآخِرُ وَالظَّاهِرُ وَالْبَاطِنُ ۖ وَهُوَ بِكُلِّ شَيْءٍ عَلِيمٌ",
+        "translation": "He is the First and the Last, the Ascendant and the Intimate, and He is, of all things, Knowing.",
+        "commentary": "In Sufi metaphysics (Wahdat al-Wujud), this verse is used to illustrate the dual nature of God's existence. God is the **Intimate/Inner** (<i>al-Batin</i>) in His transcendent Essence, completely hidden from creation. Yet, He is also the **Ascendant/Outer** (<i>al-Zahir</i>) because the physical cosmos is His outer self-disclosure. There is no void or empty space; what humans perceive as physical matter is actually the outer layer of the Divine Existence."
+    }
+}

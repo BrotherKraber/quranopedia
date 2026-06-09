@@ -1,0 +1,53 @@
+{
+    "ibn_sina_floating_man": {
+        "title": "The Floating Man",
+        "author": "Ibn Sina (Avicenna)",
+        "source": "Kitab al-Shifa (The Book of Healing) — De Anima",
+        "content": "We say: One of us must imagine himself as created all at once and perfect, but with his sight veiled so that he cannot see anything external. He is created <span class=\"annotated-term\" data-term=\"floating_man\">floating in the air or in a void</span>, where the resistance of the air does not touch him. His limbs are separated so that they do not meet or touch each other. He then considers whether he would affirm the existence of his own self. He would not doubt that he exists, even though he does not affirm his hands, his feet, his brain, his heart, or any external matter. Rather, he affirms his self without attributing to it length, breadth, or depth. If he were able in that state to imagine a hand or some other limb, he would not imagine it as a part of his self or a condition for his existence. Therefore, the self whose existence he affirms has a distinct existence from his body. The soul is an immaterial substance, and the <span class=\"annotated-term\" data-term=\"human_soul\">human soul</span> is not localized in the physical form.",
+        "annotations": {
+            "floating_man": "The 'Floating Man' is a famous thought experiment designed to prove that consciousness (self-awareness) is independent of sensory input and physical form. It demonstrates that the soul is an immaterial substance distinct from the body.",
+            "human_soul": "In Avicennian psychology, the human soul (<i>nafs</i>) is defined as an individual, incorporeal substance that acts as the form of the body but is capable of independent survival and self-awareness after death."
+        }
+    },
+    "al_ghazali_causality": {
+        "title": "On Causality and Natural Necessity",
+        "author": "Al-Ghazali (Algazel)",
+        "source": "Tahafut al-Falasifah (The Incoherence of the Philosophers) — 17th Discussion",
+        "content": "The connection between what is habitually believed to be a cause and what is believed to be an effect is not necessary according to us. But any two things, neither of which is the other, and where the affirmation of one does not imply the affirmation of the other, do not have a necessary connection. For example, the quenching of thirst and drinking, satiety and eating, burning and contact with fire, light and the rising of the sun, death and decapitation. The connection between them is due to the prior decree of God, who creates them side-by-side, not because one has a power in itself to cause the other. Fire is a dead body that has no action; the true agent of burning is God, who creates the burning in the cotton at the 'occasion' of contact. This doctrine of <span class=\"annotated-term\" data-term=\"occasionalism\">occasionalism</span> is necessary to protect the absolute power of God and the occurrence of scriptural <span class=\"annotated-term\" data-term=\"miracles\">miracles</span>.",
+        "annotations": {
+            "occasionalism": "Occasionalism is the theological theory that created substances cannot be efficient causes of events. Instead, all events are taken to be caused directly by God at every moment.",
+            "miracles": "In Kalam theology, miracles (<i>mu'jizat</i>) are explained as 'breaking of the custom' (<i>kharq al-'adah</i>). Since natural laws are just habitual customs of God's action, God can suspend them at any moment to aid a prophet."
+        }
+    },
+    "ibn_rushd_decisive": {
+        "title": "On Truth and Allegorical Interpretation",
+        "author": "Ibn Rushd (Averroes)",
+        "source": "Fasl al-Maqal (The Decisive Treatise)",
+        "content": "Since this Law of Islam is true and summons to the study which leads to the knowledge of the Truth, we the Muslim community know for certain that demonstrative study does not lead to conflict with what has been given by the Law; for <span class=\"annotated-term\" data-term=\"truth_contradict_truth\">truth does not oppose truth</span>, but accords with it and bears witness to it. If the demonstrative reasoning leads to a conclusion about any being, and the Law has mentioned that being, the literal meaning of the scripture must either agree with the conclusion or disagree with it. If it agrees, there is no discussion. If it disagrees, then the Law must be interpreted allegorically. This process of <span class=\"annotated-term\" data-term=\"tawil\">ta'wil (allegorical interpretation)</span> means extending the meaning of an expression from its literal to its metaphorical sense, in accordance with the rules of the Arabic language, to ensure harmony between philosophy and revelation.",
+        "annotations": {
+            "truth_contradict_truth": "The core principle of Ibn Rushd's philosophy, asserting that rational truth (demonstration) and revealed truth (scripture) are two expressions of the same ultimate reality, and therefore can never conflict.",
+            "tawil": "Ta'wil refers to allegorical or esoteric exegesis. Ibn Rushd argued that when scriptural texts conflict with logical demonstrations, jurists are legally obligated to interpret them metaphorically."
+        }
+    },
+    "ibn_khaldun_asabiyyah": {
+        "title": "On Social Cohesion and Nomadic Life",
+        "author": "Ibn Khaldun",
+        "source": "The Muqaddimah (The Introduction)",
+        "content": "Human social organization is necessary, and it requires a ruler to coordinate it. The basis of political authority and conquest is <span class=\"annotated-term\" data-term=\"asabiyyah\">Asabiyyah (group feeling)</span>. This solidarity is strongest among nomadic and Bedouin groups because the harsh desert environment forces them to cooperate closely for survival, fostering kinship bonds and bravery. In urban life, people become accustomed to luxury, ease, and reliance on state laws, which destroys their self-reliance and group solidarity. Once a dynasty settles in cities, its Asabiyyah begins to decay over <span class=\"annotated-term\" data-term=\"three_generations\">three generations</span>. The ruling family loses its connection to the tribe, becomes accustomed to extravagance, and is eventually overthrown by a new group with fresh, uncorrupted Asabiyyah.",
+        "annotations": {
+            "asabiyyah": "Asabiyyah is the Arabic term for social solidarity, group feeling, or collective consciousness, which Ibn Khaldun identified as the driving force behind political power and the rise of empires.",
+            "three_generations": "Ibn Khaldun's cycle of dynasties: Gen 1 retains desert roughness and strong Asabiyyah; Gen 2 transitions to luxury and centralized rule; Gen 3 forgets nomadic life completely, loses solidarity, and collapses (approx. 120 years)."
+        }
+    },
+    "mulla_sadra_existence": {
+        "title": "On the Primacy and Gradation of Existence",
+        "author": "Mulla Sadra",
+        "source": "Al-Asfar al-Arba'ah (The Four Journeys)",
+        "content": "We say: <span class=\"annotated-term\" data-term=\"primacy_of_existence\">Existence (Wujud) is the sole reality</span>, and it is a single, continuous light that manifests in diverse degrees of intensity. Essences (<i>mahiyyat</i>) are nothing but the intellectual boundaries or limits of these gradations, having no reality of their own except as concepts in the mind. The diversity we observe in the universe is not due to a diversity of essences, but to the <span class=\"annotated-term\" data-term=\"gradation_of_existence\">gradation of existence (tashkik al-wujud)</span>, ranging from the absolute intensity of God to the weakest degree of prime matter. Furthermore, the substance of the cosmos is in constant, <span class=\"annotated-term\" data-term=\"substantial_motion\">substantial motion</span>, flowing continuously toward higher stages of existence and spiritual perfection, driven by a natural love for the Light of Lights.",
+        "annotations": {
+            "primacy_of_existence": "The doctrine of <i>Asalat al-Wujud</i>, asserting that existence is the concrete reality, while essences are merely mental abstractions that define the limits of existence.",
+            "gradation_of_existence": "The concept of <i>Tashkik al-Wujud</i>, stating that reality is a single, continuous existence that differs only in intensity (like light), from God to matter.",
+            "substantial_motion": "The doctrine of <i>al-Harakat al-Jawhariyyah</i>, asserting that change occurs in the very substance of objects, representing a continuous flow toward existential perfection."
+        }
+    }
+}
